@@ -84,8 +84,9 @@ export class ContainerController {
             containerId,
             url: containerInfo.url,
             vncPort: containerInfo.vncPort,
-            vncUrl: `http://${hostIP}:${containerInfo.vncPort}/vnc.html`,
+            vncUrl: `https://${containerInfo.subdomain}/vnc.html`,
             createdAt: containerInfo.createdAt,
+            subdomain: containerInfo.subdomain
           },
         });
       } else {

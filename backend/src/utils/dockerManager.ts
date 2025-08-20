@@ -136,20 +136,22 @@ export class DockerManager {
 
       this.activeContainers.set(containerId, {
         container,
-        vncPort,
+        vncPort: (port + 1000).toString(),
         basePort: port.toString(),
+        subdomain,
         url,
         createdAt: new Date(),
         timeoutId,
       });
 
       const hostIP = process.env.HOST_IP || "localhost";
-      const vncUrl = `http://${subdomain}/vnc_lite.html`; // Lite version that auto-connects
+      const vncUrl = `https://${subdomain}/vnc_lite.html`; // Lite version that auto-connects
 
       return {
         containerId,
         vncPort: (port + 1000).toString(),
         vncUrl,
+        subdomain,
       };
     } catch (error) {
       console.error("Error creating container:", error);
@@ -171,8 +173,8 @@ export class DockerManager {
       clearTimeout(containerInfo.timeoutId);
 
       await containerInfo.container.stop();
-      if(containerInfo.basePort){
-        releasePort(+containerInfo.basePort)
+      if (containerInfo.basePort) {
+        releasePort(+containerInfo.basePort);
       }
       // Update database
       const session = await this.db.getSession(containerId);
@@ -201,37 +203,38 @@ export class DockerManager {
     return Array.from(this.activeContainers.entries()).map(([id, info]) => ({
       containerId: id,
       url: info.url,
+      subdomain: info.subdomain,
       vncPort: info.vncPort,
       createdAt: info.createdAt,
     }));
   }
 
   private async cleanupOrphanedContainers() {
-  try {
-    const containers = await this.docker.listContainers({
-      all: true,
-      filters: {
-        name: ["vnc-browser-"], // only clean your prefixed containers
-      },
-    });
+    try {
+      const containers = await this.docker.listContainers({
+        all: true,
+        filters: {
+          name: ["vnc-browser-"], // only clean your prefixed containers
+        },
+      });
 
-    for (const container of containers) {
-      const containerObj = this.docker.getContainer(container.Id);
+      for (const container of containers) {
+        const containerObj = this.docker.getContainer(container.Id);
 
-      const vncPort = container.Ports.find(
-        (p) => p.PrivatePort === 5900 && p.PublicPort
-      );
+        const vncPort = container.Ports.find(
+          (p) => p.PrivatePort === 6080 && p.PublicPort
+        );
 
-      if (vncPort && vncPort.PublicPort) {
-        releasePort(vncPort.PublicPort);
-        console.log(`Released port ${vncPort.PublicPort} back to pool`);
+        if (vncPort && vncPort.PublicPort) {
+          releasePort(vncPort.PublicPort);
+          console.log(`Released port ${vncPort.PublicPort} back to pool`);
+        }
+
+        await containerObj.remove({ force: true });
+        console.log(`Cleaned up orphaned container: ${container.Names[0]}`);
       }
-
-      await containerObj.remove({ force: true });
-      console.log(`Cleaned up orphaned container: ${container.Names[0]}`);
+    } catch (error) {
+      console.error("Container cleanup failed:", error);
     }
-  } catch (error) {
-    console.error("Container cleanup failed:", error);
   }
-}
 }
