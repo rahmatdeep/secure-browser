@@ -1,8 +1,9 @@
-import { Container } from 'dockerode';
+import { Container } from "dockerode";
 
 export interface ContainerInfo {
   container: Container;
   vncPort: string;
+  basePort: string;
   url: string;
   createdAt: Date;
   timeoutId: NodeJS.Timeout;
@@ -31,4 +32,3 @@ export interface ApiResponse<T = any> {
 export interface CreateContainerRequest {
   url: string;
 }
-

@@ -7,6 +7,7 @@ import {
 } from "../types/index";
 import { DatabaseService } from "../services/databaseService";
 import { LogAction } from "@prisma/client";
+import { getFreePort, releasePort } from "./portPool";
 
 export class DockerManager {
   private docker: Docker;
@@ -43,6 +44,11 @@ export class DockerManager {
     const containerId = uuidv4();
     const isMobile = this.isMobileUserAgent(userAgent || "");
     const chromeUserAgent = this.getChromeUserAgent(isMobile);
+    const freePort = getFreePort();
+    if (!freePort) {
+      throw new Error("no free port available");
+    }
+    const { port, subdomain } = freePort;
 
     try {
       const container = await this.docker.createContainer({
@@ -53,8 +59,8 @@ export class DockerManager {
           CpuShares: 512, // Half CPU
           NetworkMode: "bridge",
           PortBindings: {
-            "6080/tcp": [{ HostPort: "0" }], // Random port for noVNC
-            "5900/tcp": [{ HostPort: "0" }], // Random port for VNC
+            "6080/tcp": [{ HostPort: port.toString() }], // Random port for noVNC
+            "5900/tcp": [{ HostPort: (port + 1000).toString() }], // Random port for VNC
           },
           AutoRemove: true, // automatically remove the container when it stops
         },
@@ -131,17 +137,18 @@ export class DockerManager {
       this.activeContainers.set(containerId, {
         container,
         vncPort,
+        basePort: port.toString(),
         url,
         createdAt: new Date(),
         timeoutId,
       });
 
       const hostIP = process.env.HOST_IP || "localhost";
-      const vncUrl = `http://${hostIP}:${vncPort}/vnc_lite.html`; // Lite version that auto-connects
+      const vncUrl = `http://${subdomain}/vnc_lite.html`; // Lite version that auto-connects
 
       return {
         containerId,
-        vncPort,
+        vncPort: (port + 1000).toString(),
         vncUrl,
       };
     } catch (error) {
@@ -164,7 +171,9 @@ export class DockerManager {
       clearTimeout(containerInfo.timeoutId);
 
       await containerInfo.container.stop();
-
+      if(containerInfo.basePort){
+        releasePort(+containerInfo.basePort)
+      }
       // Update database
       const session = await this.db.getSession(containerId);
       if (session) {
@@ -198,21 +207,31 @@ export class DockerManager {
   }
 
   private async cleanupOrphanedContainers() {
-    try {
-      const containers = await this.docker.listContainers({
-        all: true,
-        filters: {
-          name: ["vnc-browser-"],
-        },
-      });
+  try {
+    const containers = await this.docker.listContainers({
+      all: true,
+      filters: {
+        name: ["vnc-browser-"], // only clean your prefixed containers
+      },
+    });
 
-      for (const container of containers) {
-        const containerObj = this.docker.getContainer(container.Id);
-        await containerObj.remove({ force: true });
-        console.log(`Cleaned up orphaned container: ${container.Names[0]}`);
+    for (const container of containers) {
+      const containerObj = this.docker.getContainer(container.Id);
+
+      const vncPort = container.Ports.find(
+        (p) => p.PrivatePort === 5900 && p.PublicPort
+      );
+
+      if (vncPort && vncPort.PublicPort) {
+        releasePort(vncPort.PublicPort);
+        console.log(`Released port ${vncPort.PublicPort} back to pool`);
       }
-    } catch (error) {
-      console.error("Container cleanup failed:", error);
+
+      await containerObj.remove({ force: true });
+      console.log(`Cleaned up orphaned container: ${container.Names[0]}`);
     }
+  } catch (error) {
+    console.error("Container cleanup failed:", error);
   }
+}
 }
