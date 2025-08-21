@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3101";
@@ -13,7 +14,6 @@ export async function createSession(formData: FormData) {
   }
 
   try {
-    const { headers } = await import("next/headers");
     const headersList = await headers();
     const userAgent = headersList.get("user-agent") || "";
 
