@@ -18,7 +18,7 @@ export default function Home() {
         ></div>
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="flex flex-col min-h-screen relative max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="relative inline-block mb-4 sm:mb-6">
@@ -93,7 +93,7 @@ export default function Home() {
           </div>
 
           {/* Active sessions */}
-          <div
+          {/* <div
             className="relative group"
             style={{
               animation: "fadeInUp 0.8s ease-out forwards",
@@ -112,11 +112,11 @@ export default function Home() {
               </div>
               <ActiveSessions />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-gray-800/50">
+        <div className="text-center mt-auto pt-6 sm:pt-8 border-t border-gray-800/50">
           <p className="text-gray-500 text-xs sm:text-sm flex items-center justify-center gap-2 px-4">
             <Shield className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             <span className="text-center">
