@@ -1,5 +1,5 @@
 import { CreateSessionForm } from "@/components/CreateSessionForm";
-import { ActiveSessions } from "@/components/ActiveSession";
+// import { ActiveSessions } from "@/components/ActiveSession";
 import { Shield, Zap, Lock, Globe } from "lucide-react";
 
 export default function Home() {
