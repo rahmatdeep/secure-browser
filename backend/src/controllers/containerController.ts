@@ -11,7 +11,7 @@ export class ContainerController {
 
   async createContainer(req: Request, res: Response): Promise<void> {
     try {
-      const { url } = req.params;
+      const { url } = req.body;
       const userAgent = req.get("User-Agent") || "";
       if (!url) {
         res.status(400).json({ success: false, error: "URL is required" });
