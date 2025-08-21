@@ -9,12 +9,9 @@ export class ContainerController {
     this.dockerManager = new DockerManager();
   }
 
-  async createContainer(
-    req: Request<{}, ApiResponse, CreateContainerRequest>,
-    res: Response<ApiResponse>
-  ): Promise<void> {
+  async createContainer(req: Request, res: Response): Promise<void> {
     try {
-      const { url } = req.body;
+      const { url } = req.params;
       const userAgent = req.get("User-Agent") || "";
       if (!url) {
         res.status(400).json({ success: false, error: "URL is required" });
@@ -47,7 +44,7 @@ export class ContainerController {
 
   async stopContainer(
     req: Request<{ containerId: string }>,
-    res: Response<ApiResponse>
+    res: Response
   ): Promise<void> {
     try {
       const { containerId } = req.params;
@@ -77,7 +74,7 @@ export class ContainerController {
       const containerInfo = this.dockerManager.getContainerInfo(containerId);
 
       if (containerInfo) {
-        const hostIP = process.env.HOST_IP || "localhost";
+        // const hostIP = process.env.HOST_IP || "localhost";
         res.json({
           success: true,
           data: {
@@ -86,7 +83,6 @@ export class ContainerController {
             vncPort: containerInfo.vncPort,
             vncUrl: `https://${containerInfo.subdomain}/vnc.html`,
             createdAt: containerInfo.createdAt,
-            subdomain: containerInfo.subdomain
           },
         });
       } else {

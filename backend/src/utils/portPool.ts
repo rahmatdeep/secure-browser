@@ -1,6 +1,4 @@
-// simplePortPool.ts
 
-// Object to keep track of ports
 const portPool: Record<
   number,
   { subdomain: string; status: "free" | "occupied" }
@@ -19,7 +17,6 @@ const portPool: Record<
   25112: { subdomain: "vnc12.secure-browser.rahmatdeep.com", status: "free" },
 };
 
-// Function to get a free port
 function getFreePort() {
   for (const port in portPool) {
     if (portPool[+port].status === "free") {
@@ -27,10 +24,9 @@ function getFreePort() {
       return { port: +port, subdomain: portPool[+port].subdomain };
     }
   }
-  return null; // No free ports
+  return null; 
 }
 
-// Function to release a port back to free
 function releasePort(port: number) {
   if (portPool[port]) {
     portPool[port].status = "free";

@@ -132,12 +132,11 @@ export class DockerManager {
 
       const timeoutId = setTimeout(() => {
         this.stopContainer(containerId);
-      }, 10 * 60 * 1000); // 10 minutes
+      }, 2 * 60 * 1000); // 10 minutes
 
       this.activeContainers.set(containerId, {
         container,
-        vncPort: (port + 1000).toString(),
-        basePort: port.toString(),
+        vncPort: port.toString(),
         subdomain,
         url,
         createdAt: new Date(),
@@ -149,9 +148,8 @@ export class DockerManager {
 
       return {
         containerId,
-        vncPort: (port + 1000).toString(),
+        vncPort: port.toString(),
         vncUrl,
-        subdomain,
       };
     } catch (error) {
       console.error("Error creating container:", error);
@@ -173,8 +171,8 @@ export class DockerManager {
       clearTimeout(containerInfo.timeoutId);
 
       await containerInfo.container.stop();
-      if (containerInfo.basePort) {
-        releasePort(+containerInfo.basePort);
+      if (containerInfo.vncPort) {
+        releasePort(+containerInfo.vncPort);
       }
       // Update database
       const session = await this.db.getSession(containerId);

@@ -6,7 +6,7 @@ import containerRoutes from "./routes/container";
 import { DatabaseService } from "./services/databaseService";
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3101;
 
 const initializeDatabase = async () => {
   try {

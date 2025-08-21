@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Get environment variables
+# Get and set default values for environment variables
 URL=${TARGET_URL:-"https://example.com"}
 USER_AGENT=${USER_AGENT:-"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Safari/537.36"}
 IS_MOBILE=${IS_MOBILE:-"false"}

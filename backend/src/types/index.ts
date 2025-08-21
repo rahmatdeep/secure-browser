@@ -3,7 +3,6 @@ import { Container } from "dockerode";
 export interface ContainerInfo {
   container: Container;
   vncPort: string;
-  basePort: string;
   url: string;
   createdAt: Date;
   timeoutId: NodeJS.Timeout;
@@ -14,7 +13,6 @@ export interface CreateContainerResponse {
   containerId: string;
   vncPort: string;
   vncUrl: string;
-  subdomain: string;
 }
 
 export interface ContainerSummary {
