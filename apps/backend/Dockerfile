@@ -30,4 +30,4 @@ COPY --from=installer /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=installer /app/apps/backend/package.json ./apps/backend/package.json
 
 EXPOSE 3001
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma && node apps/backend/dist/index.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma && node apps/backend/dist/index.js"]
