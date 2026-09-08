@@ -4,8 +4,8 @@ services:
     container_name: secure-browser-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-secure_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD in .env}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-secure_browser}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -22,7 +22,7 @@ services:
       - "${PORT:-3001}:3001"
     environment:
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:?Please set DATABASE_URL in .env}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-secure_browser}}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       DOCKER_NETWORK: "secure-browser-net"
       BROWSER_IMAGE: "vnc-browser-chrome:latest"
