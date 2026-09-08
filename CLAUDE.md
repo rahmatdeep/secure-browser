@@ -6,42 +6,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Secure Browser: isolated, disposable web browsing sessions. A user submits a URL; the backend spins up a short-lived Docker container running Chrome + a VNC server, and the frontend embeds that container's noVNC view in an iframe so the user "browses" inside a sandboxed remote container instead of their own machine.
 
-## Repo layout
+## Repo layout (pnpm + Turborepo Monorepo)
 
-- `backend/` — Express + TypeScript API that manages Docker containers and session state (Postgres via Prisma).
-- `frontend/` — Next.js (App Router) UI, mostly Server Actions calling the backend API.
-- `backend/Dockerfile` + `backend/start.sh` — build the **per-session browser container image** (`vnc-browser-chrome:latest`), not the backend service itself. This image runs Xvfb + openbox + x11vnc + noVNC + Chrome in kiosk mode pointed at the requested URL.
+- `apps/backend/` — Express + TypeScript API that manages Docker containers, session state (Postgres via Prisma), and dynamic HTTP/WebSocket proxying.
+- `apps/frontend/` — Next.js 15 (App Router) UI.
+- `packages/shared/` (`@secure-browser/shared`) — Shared TypeScript types (`ContainerInfo`, `ApiResponse`) and device detection (`isMobileUserAgent`, `getChromeUserAgent`, `getViewport`).
+- `docker/browser/` — Contains `Dockerfile` and `start.sh` for the **per-session browser container image** (`vnc-browser-chrome:latest`), cleanly separated from the backend service image.
+- `docker-compose.yml` — Full-stack orchestration (PostgreSQL, Backend with Docker socket mount, Frontend).
 
 ## Commands
 
-Backend (`cd backend`):
-- `npm run dev` — build then run (`tsc -b && node dist/index.js`); there's no watch mode.
-- `npm run build` — TypeScript build only.
-- `npm run db:push` / `npm run db:migrate` / `npm run db:studio` — Prisma schema sync / migration / studio.
-- `docker build -t vnc-browser-chrome:latest .` — must be run once (and after any `start.sh`/`Dockerfile` change) so `DockerManager` has an image to launch; container creation fails without it.
+Root monorepo commands:
+- `pnpm dev` — Start backend and frontend concurrently via Turborepo.
+- `pnpm build` — Build shared package, backend, and frontend with Turbo caching.
+- `pnpm test` — Run all Vitest regression tests across workspaces.
+- `pnpm db:migrate` / `pnpm db:push` / `pnpm db:studio` — Prisma database commands.
+- `pnpm docker:build-browser` — Builds `vnc-browser-chrome:latest` from `docker/browser/`.
 
-Frontend (`cd frontend`):
-- `npm run dev` — Next.js dev server with Turbopack, fixed to port **3100** (`next dev -p 3100`).
-- `npm run build` / `npm run start -p 3100` — production build/serve.
-- `npm run lint` — `next lint`.
+Docker Compose:
+- `docker compose up -d --build` — Starts Postgres, Backend, and Frontend.
 
-There is no test suite configured in either package (no `test` script, no test files).
+## Architecture / Request Flow
 
-Env vars: `backend/.env` needs `DATABASE_URL` (Postgres), plus optional `PORT`, `FRONTEND_URL` (for CORS), `HOST_IP` (used to build the VNC URL returned to the frontend). Frontend reads `NEXT_PUBLIC_API_URL` to reach the backend (defaults to `http://localhost:3101` in the code, though the backend itself defaults `PORT` to 3001 — check both when wiring frontend/backend together locally).
-
-## Architecture / request flow
-
-1. `frontend/src/components/CreateSessionForm.tsx` submits a form action to `frontend/src/actions/sessionActions.ts::createSession`, which POSTs `{ url }` (plus the real browser's `User-Agent` header, forwarded manually) to the backend's `POST /api/containers/create`.
-2. `backend/src/controllers/containerController.ts` validates the URL and delegates to `backend/src/utils/dockerManager.ts::DockerManager`, the core of the app.
+1. `apps/frontend/src/components/CreateSessionForm.tsx` submits a form action to `apps/frontend/src/actions/sessionActions.ts::createSession`, which POSTs `{ url }` (plus the real browser's `User-Agent` header) to the backend's `POST /api/containers/create`.
+2. `apps/backend/src/controllers/containerController.ts` validates the URL and delegates to `apps/backend/src/utils/dockerManager.ts::DockerManager`.
 3. `DockerManager.createContainer`:
-   - Detects mobile vs desktop from the User-Agent (regex duplicated in both frontend `session/[containerId]/page.tsx` and backend `dockerManager.ts` — keep them in sync if changed) and picks a matching viewport/UA to inject into the container.
-   - Launches a `vnc-browser-chrome:latest` container with random host ports bound to the container's `5900` (VNC) and `6080` (noVNC), passing the target URL/UA/viewport as env vars consumed by `start.sh`.
-   - Waits a fixed 8s for the container to become ready (no real readiness check is currently wired up — see commented-out polling code).
-   - Records the session in Postgres (`ContainerSession` + `ContainerLog` rows via `DatabaseService`, `backend/src/services/databaseService.ts`) and schedules an in-memory 10-minute auto-stop timer.
-   - In-memory `activeContainers: Map<containerId, ContainerInfo>` is the source of truth for *running* containers; the DB is the source of truth for historical session/log data. These can drift if the backend process restarts (the map is lost, but DB rows and real containers may persist) — `cleanupOrphanedContainers()` runs on startup to force-remove any leftover `vnc-browser-*` containers.
-4. The frontend polls/reads container info via `GET /api/containers/:id` and renders `session.vncUrl` (a `.../vnc_lite.html` URL) inside an iframe (`frontend/src/app/session/[containerId]/page.tsx`).
-5. Stopping (`DELETE /api/containers/:id`, or the 10-minute timeout) stops the Docker container and marks the session `ENDED` with a computed duration in Postgres.
-
-## Data model
-
-`backend/prisma/schema.prisma` defines two models: `ContainerSession` (one per browsing session, status `ACTIVE | ENDED | FAILED`) and `ContainerLog` (append-only audit trail per session, `LogAction` enum: `CONTAINER_CREATED`, `CONTAINER_STARTED`, `URL_OPENED`, `CONTAINER_STOPPED`, `CONTAINER_TIMEOUT`, `ERROR_OCCURRED`). Sessions are looked up by `containerId` (a UUID generated per request, not the Docker container ID).
+   - Uses `@secure-browser/shared` to detect mobile vs desktop and pick the appropriate viewport and user agent.
+   - Attaches the container to the internal Docker bridge network (`secure-browser-net`).
+   - **Zero Host Port Bindings**: Container port 6080 is internal-only.
+   - Waits for container initialization, logs the session in Postgres, schedules a 10-minute auto-termination timer, and stores internal IP.
+   - Returns a path-based proxy URL: `/api/containers/${containerId}/vnc/vnc_lite.html`.
+4. `apps/backend/src/index.ts` runs a dynamic reverse proxy (`http-proxy-middleware`):
+   - Proxies `/api/containers/:id/vnc/*` directly to `http://vnc-browser-${containerId}:6080` (or container IP).
+   - Handles the WebSocket `upgrade` event on the HTTP server, streaming VNC over WebSocket without opening random firewall ports.
+5. The frontend embeds the VNC stream in an iframe:
+   `${API_BASE}${session.vncUrl}?path=api/containers/${containerId}/vnc/websockify`
+6. Stopping (`DELETE /api/containers/:id`, or the 10-minute timeout) stops the container and marks the session `ENDED` in Postgres.
