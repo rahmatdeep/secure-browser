@@ -56,8 +56,8 @@ export class DockerManager {
     try {
       await this.ensureNetwork();
 
-      // Configure host port bindings if explicitly requested (e.g., local macOS host dev)
-      const enableHostPortBindings = process.env.ENABLE_HOST_PORT_BINDINGS === "true";
+      // Configure host port bindings (enabled by default for host dev, e.g., local macOS)
+      const enableHostPortBindings = process.env.ENABLE_HOST_PORT_BINDINGS !== "false";
       const portBindings = enableHostPortBindings
         ? {
             "6080/tcp": [{ HostPort: "0" }],

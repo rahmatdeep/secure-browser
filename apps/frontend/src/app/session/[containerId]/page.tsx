@@ -19,7 +19,10 @@ interface SessionPageProps {
 }
 
 async function getSessionInfo(containerId: string) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3101";
+  const API_BASE =
+    process.env.INTERNAL_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:3001";
 
   try {
     const response = await axios.get(

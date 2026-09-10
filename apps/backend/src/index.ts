@@ -48,18 +48,24 @@ const vncProxy = createProxyMiddleware({
   changeOrigin: true,
   ws: true,
   router: async (req) => {
-    const match = req.url?.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
+    const rawUrl = (req as any).originalUrl || req.url || "";
+    const match = rawUrl.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
     if (match) {
       const containerId = match[1];
       const dockerManager = containerController.getDockerManager();
       const containerInfo = dockerManager.getContainerInfo(containerId);
 
-      // 1. If container IP is known on bridge network, use it directly
+      // 1. If mapped host port is present (e.g. host dev on macOS), use localhost:<hostPort>
+      if (containerInfo?.vncPort && containerInfo.vncPort !== "6080") {
+        return `http://127.0.0.1:${containerInfo.vncPort}`;
+      }
+
+      // 2. If container IP is known on bridge network (inside Docker), use it directly
       if (containerInfo?.containerIp) {
         return `http://${containerInfo.containerIp}:6080`;
       }
 
-      // 2. Default to Docker internal DNS name on secure-browser-net
+      // 3. Default to Docker internal DNS name on secure-browser-net
       return `http://vnc-browser-${containerId}:6080`;
     }
     return undefined;

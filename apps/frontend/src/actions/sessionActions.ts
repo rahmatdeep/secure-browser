@@ -4,13 +4,18 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import axios from "axios";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3101";
+const API_BASE =
+  process.env.INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:3001";
 
 export async function createSession(formData: FormData) {
   const url = formData.get("url") as string;
   if (!url) {
     throw new Error("URL is required");
   }
+
+  let redirectUrl: string | null = null;
 
   try {
     const { headers } = await import("next/headers");
@@ -32,13 +37,17 @@ export async function createSession(formData: FormData) {
 
     if (data.success) {
       revalidatePath("/");
-      redirect(`/session/${data.data.containerId}`);
+      redirectUrl = `/session/${data.data.containerId}`;
     } else {
       throw new Error(data.error || "Failed to create session");
     }
   } catch (error) {
     console.error("Error creating session:", error);
     throw error;
+  }
+
+  if (redirectUrl) {
+    redirect(redirectUrl);
   }
 }
 

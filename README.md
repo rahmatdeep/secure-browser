@@ -41,7 +41,10 @@ A secure, containerized Remote Browser Isolation (RBI) solution that runs web br
 
 3. **Build the browser image**:
    ```bash
+   # Native build for current host (Apple Silicon ARM64, Intel/AMD64 Linux & Mac):
    docker build -t vnc-browser-chrome:latest docker/browser
+   # Or via pnpm / compose shortcut:
+   pnpm docker:build-browser
    ```
 
 4. **Launch the entire stack**:

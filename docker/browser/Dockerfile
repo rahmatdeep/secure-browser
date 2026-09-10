@@ -1,5 +1,5 @@
-# Use Ubuntu base image
-FROM ubuntu:20.04
+# Use Ubuntu 22.04 LTS base image
+FROM ubuntu:22.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -17,15 +17,23 @@ RUN apt-get update && apt-get install -y \
     python3-numpy \
     python3-websockify \
     unclutter \
+    ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chrome
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && apt-get clean \
+# Install Google Chrome for current architecture (supports native arm64 and amd64)
+RUN ARCH="$(dpkg --print-architecture)" && \
+    if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "arm64" ]; then \
+        wget -q "https://dl.google.com/linux/direct/google-chrome-stable_current_${ARCH}.deb" && \
+        apt-get update && \
+        apt-get install -y "./google-chrome-stable_current_${ARCH}.deb" && \
+        rm -f "./google-chrome-stable_current_${ARCH}.deb"; \
+    else \
+        apt-get update && \
+        apt-get install -y chromium-browser && \
+        ln -sf "$(which chromium-browser)" /usr/bin/google-chrome; \
+    fi && \
+    apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install noVNC
