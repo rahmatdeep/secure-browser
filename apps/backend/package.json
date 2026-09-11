@@ -4,10 +4,11 @@
   "description": "Backend for secure containerized browser app",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "prisma generate && tsc -b",
     "start": "node dist/index.js",
-    "dev": "npm run build && npm run start",
+    "dev": "prisma generate && tsc -b && node dist/index.js",
     "test": "vitest run",
+    "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
