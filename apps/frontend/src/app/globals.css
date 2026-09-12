@@ -165,3 +165,121 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Scroll-driven motion ────────────────────────────────────────────────
+   One registered property, --p (0→1), drives every scrubbed effect.
+   Driven natively by animation-timeline where supported, and by a rAF
+   fallback in Firefox (see Scrub.tsx). p=0 is always a sane resting state,
+   so a failure to drive it degrades to a static, correct-looking page.     */
+
+@property --p {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
+@property --mm {
+  syntax: "<integer>";
+  initial-value: 10;
+  inherits: true;
+}
+
+@keyframes scrub-p {
+  from {
+    --p: 0;
+  }
+  to {
+    --p: 1;
+  }
+}
+
+@keyframes scrub-mm {
+  from {
+    --mm: 10;
+  }
+  to {
+    --mm: 0;
+  }
+}
+
+/* The native scroll timeline is wired up imperatively in Scrub.tsx, NOT here.
+   Lightning CSS folds `animation-timeline: view()` into the `animation`
+   shorthand (`animation: linear both scrub-p view()`), a form Chrome does not
+   parse — the declaration is dropped and animation-name resolves to none.
+   Setting the longhands on the element sidesteps the optimizer entirely. */
+
+/* Sticky stage for the pinned sequences */
+.pin-stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Beat captions cross-fade on --p; each owns a slice of the scroll range. */
+.beat {
+  /* abs() is not broadly supported yet; max(a-b, b-a) is the portable form. */
+  opacity: calc(
+    1 - min(1, max(var(--p) - var(--at), var(--at) - var(--p)) * var(--sharp, 5))
+  );
+  transition: none;
+}
+
+/* Line-by-line text reveal, staggered by --i */
+.line {
+  display: block;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(6px);
+}
+
+.line.is-in {
+  animation: rise 800ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disabling the animation would strand --p at 0, which is the *unresolved*
+     state: a half-scaled frame with invisible content. Pin it at 1 instead so
+     every scrubbed section renders its finished state, and let the pinned
+     stages flow normally with all beats stacked and legible. */
+  .scrub-view,
+  .scrub-pin,
+  .scrub-mm {
+    animation: none !important;
+    --p: 1;
+    --mm: 0;
+  }
+  .pin-stage {
+    position: static;
+    height: auto;
+    padding-block: 72px;
+  }
+  .beats {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .beats .beat {
+    position: static;
+    opacity: 1;
+  }
+  .line {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none !important;
+  }
+}
+
+/* Scrubbed minute readout. The integer property steps 10→0 and CSS counters
+   render it, so the number is driven by the same --p as everything else. */
+.mm::before {
+  counter-reset: mm var(--mm);
+  content: counter(mm);
+  font-variant-numeric: tabular-nums;
+}
