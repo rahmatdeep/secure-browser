@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: secure-browser-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-secure_browser}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-secure_browser}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - secure-browser-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: dev
+    container_name: secure-browser-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-secure_browser}}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      DOCKER_NETWORK: "secure-browser-net"
+      BROWSER_IMAGE: "vnc-browser-chrome:latest"
+      ENABLE_HOST_PORT_BINDINGS: "true"
+    volumes:
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./apps/backend/prisma:/app/apps/backend/prisma
+      - ./packages/shared/src:/app/packages/shared/src
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma && pnpm --filter @secure-browser/backend dev:watch"]
+    networks:
+      - secure-browser-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      target: dev
+    container_name: secure-browser-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:3001}
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./apps/frontend/src:/app/apps/frontend/src
+      - ./apps/frontend/public:/app/apps/frontend/public
+      - ./packages/shared/src:/app/packages/shared/src
+    depends_on:
+      - backend
+    networks:
+      - secure-browser-net
+
+volumes:
+  postgres_data:
+
+networks:
+  secure-browser-net:
+    name: secure-browser-net
+    driver: bridge

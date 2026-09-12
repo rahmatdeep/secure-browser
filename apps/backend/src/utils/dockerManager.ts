@@ -103,18 +103,25 @@ export class DockerManager {
       const hostPort =
         networkSettings?.Ports?.["6080/tcp"]?.[0]?.HostPort || "6080";
 
-      // Create database session
-      const session = await this.db.createSession(containerId, url, hostPort);
-      await this.db.logAction(
-        session.id,
-        LogAction.CONTAINER_CREATED,
-        `Container created for URL: ${url} (${isMobile ? "Mobile" : "Desktop"} mode)`
-      );
-      await this.db.logAction(
-        session.id,
-        LogAction.CONTAINER_STARTED,
-        `Container running on network ${this.networkName} (IP: ${containerIp})`
-      );
+      // Attempt database audit logging (resilient: failures do not block the active session)
+      try {
+        const session = await this.db.createSession(containerId, url, hostPort);
+        await this.db.logAction(
+          session.id,
+          LogAction.CONTAINER_CREATED,
+          `Container created for URL: ${url} (${isMobile ? "Mobile" : "Desktop"} mode)`
+        );
+        await this.db.logAction(
+          session.id,
+          LogAction.CONTAINER_STARTED,
+          `Container running on network ${this.networkName} (IP: ${containerIp})`
+        );
+      } catch (dbError) {
+        console.warn(
+          "Database audit logging unavailable (continuing session):",
+          (dbError as Error)?.message || dbError
+        );
+      }
 
       const timeoutId = setTimeout(() => {
         this.stopContainer(containerId);
@@ -139,6 +146,13 @@ export class DockerManager {
       };
     } catch (error) {
       console.error("Error creating container:", error);
+      // Attempt cleanup if container was created
+      try {
+        const orphan = this.docker.getContainer(`vnc-browser-${containerId}`);
+        await orphan.remove({ force: true });
+      } catch {
+        // Ignore cleanup error
+      }
       throw error;
     }
   }
@@ -156,14 +170,18 @@ export class DockerManager {
 
       await containerInfo.container.stop();
 
-      const session = await this.db.getSession(containerId);
-      if (session) {
-        await this.db.endSession(containerId);
-        await this.db.logAction(
-          session.id,
-          LogAction.CONTAINER_STOPPED,
-          "Container stopped by user or timeout"
-        );
+      try {
+        const session = await this.db.getSession(containerId);
+        if (session) {
+          await this.db.endSession(containerId);
+          await this.db.logAction(
+            session.id,
+            LogAction.CONTAINER_STOPPED,
+            "Container stopped by user or timeout"
+          );
+        }
+      } catch (dbError) {
+        console.warn("Database audit logging error during session stop:", dbError);
       }
 
       this.activeContainers.delete(containerId);

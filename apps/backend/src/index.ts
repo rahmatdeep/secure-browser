@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config({ path: [".env", "../../.env"] });
+
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import cors from "cors";
@@ -6,6 +9,10 @@ import rateLimit from "express-rate-limit";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import containerRoutes, { containerController } from "./routes/container";
 import { DatabaseService } from "./services/databaseService";
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/secure_browser";
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;

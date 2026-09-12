@@ -1,3 +1,17 @@
+FROM node:20-alpine AS dev
+WORKDIR /app
+ENV NODE_ENV=development
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/frontend/package.json ./apps/frontend/
+COPY packages/shared/package.json ./packages/shared/
+RUN pnpm install --frozen-lockfile
+COPY packages/shared ./packages/shared
+COPY apps/frontend ./apps/frontend
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@secure-browser/frontend", "dev"]
+
 FROM node:20-alpine AS pruner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app

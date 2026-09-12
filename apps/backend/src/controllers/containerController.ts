@@ -41,7 +41,10 @@ export class ContainerController {
       console.error("Error creating container:", error);
       res
         .status(500)
-        .json({ success: false, error: "Failed to create container" });
+        .json({
+          success: false,
+          error: (error as Error)?.message || "Failed to create container",
+        });
     }
   }
 

@@ -2,7 +2,10 @@
   "name": "secure-browser",
   "private": true,
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "docker compose -f docker-compose.dev.yml up",
+    "dev:build": "docker compose -f docker-compose.dev.yml up --build",
+    "dev:down": "docker compose -f docker-compose.dev.yml down",
+    "dev:host": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
