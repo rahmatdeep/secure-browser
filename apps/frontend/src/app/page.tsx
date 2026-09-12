@@ -4,8 +4,7 @@ import { IsolationSequence } from "@/components/IsolationSequence";
 import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
-import { ArrowDown, Shield } from "lucide-react";
-
+import { ArrowDown } from "lucide-react";
 const STATS: [string, string][] = [
   ["0", "host ports bound. Port 6080 never leaves the bridge network."],
   ["10:00", "until the container stops itself, whether you closed the tab or not."],
@@ -15,17 +14,24 @@ const STATS: [string, string][] = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-bg text-fg">
-      <nav className="flex items-center justify-between border-b border-line px-5 py-[22px] sm:px-[72px]">
-        <a href="#" className="flex items-center gap-2.5 hover:no-underline">
-          <Shield className="h-[19px] w-[19px]" strokeWidth={1.5} />
-          <span className="text-[15px] font-medium tracking-[-0.017em]">
-            SafeWeb
+      <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
+        <div className="mx-auto flex max-w-[1024px] items-center justify-between border-b border-line pb-4">
+          <a
+            href="#create"
+            className="group flex items-baseline gap-3 hover:no-underline"
+            aria-label="SafeWeb home"
+          >
+            <span className="text-[15px] font-semibold leading-none tracking-[-0.018em]">
+              SafeWeb
+            </span>
+            <span className="hidden text-[12.5px] leading-none tracking-[-0.006em] text-fg-3 sm:inline">
+              disposable browser sessions
+            </span>
+          </a>
+
+          <span className="hidden font-mono text-[11px] text-fg-3 sm:block">
+            bridge-only / 10:00 ttl / no reuse
           </span>
-        </a>
-        <div className="hidden items-center gap-9 text-[14px] tracking-[-0.008em] text-fg-2 sm:flex">
-          <a href="#isolation">Isolation</a>
-          <a href="#lifetime">Lifetime</a>
-          <a href="#sessions">Sessions</a>
         </div>
       </nav>
 
@@ -56,7 +62,6 @@ export default function Home() {
           throwaway container and reaches you as pixels.
         </p>
 
-        {/* the primary action, in the hero where it belongs */}
         <div
           className="rise mt-2 w-full max-w-[620px]"
           style={{ animationDelay: "340ms" }}
