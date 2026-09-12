@@ -6,9 +6,13 @@ import { useState } from "react";
 
 interface StopSessionButtonProps {
   containerId: string;
+  variant?: "icon" | "light";
 }
 
-export function StopSessionButton({ containerId }: StopSessionButtonProps) {
+export function StopSessionButton({
+  containerId,
+  variant = "icon",
+}: StopSessionButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleStop = async () => {
@@ -36,22 +40,28 @@ export function StopSessionButton({ containerId }: StopSessionButtonProps) {
     <button
       onClick={handleStop}
       disabled={isLoading}
-      className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-4 py-2.5 sm:py-2.5 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-center flex-1 sm:flex-initial sm:min-w-[120px]"
+      aria-label="End session"
+      title="End session"
+      className={
+        variant === "light"
+          ? "flex h-9 shrink-0 items-center justify-center gap-2 rounded-full bg-on-ink px-[17px] text-[13.5px] font-medium tracking-[-0.009em] text-ink transition-[filter] duration-200 ease-[var(--ease)] hover:brightness-95 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-fg-2 transition-[background,border-color,color] duration-200 ease-[var(--ease)] hover:bg-surface focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+      }
     >
-      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-      <div className="relative flex items-center justify-center gap-2">
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Stopping...</span>
-          </>
-        ) : (
-          <>
-            <X className="w-4 h-4" />
-            <span>Stop Session</span>
-          </>
-        )}
-      </div>
+      {isLoading ? (
+        <>
+          <Loader2 className="spin h-[15px] w-[15px]" strokeWidth={1.5} />
+          {variant === "light" ? <span>Ending</span> : null}
+        </>
+      ) : (
+        <>
+          {variant === "icon" ? (
+            <X className="h-[15px] w-[15px]" strokeWidth={1.5} />
+          ) : (
+            <span>End session</span>
+          )}
+        </>
+      )}
     </button>
   );
 }

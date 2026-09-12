@@ -1,7 +1,7 @@
 "use client";
 
 import { createSession } from "@/actions/sessionActions";
-import { Globe, Sparkles, Loader2 } from "lucide-react";
+import { Globe, Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
 function SubmitButton() {
@@ -11,52 +11,54 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="group relative w-full overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white py-3 px-4 sm:py-4 sm:px-6 rounded-xl font-semibold text-base sm:text-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+      className="flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-accent px-6 text-[15px] font-medium tracking-[-0.011em] text-white transition-[filter,background] duration-200 ease-[var(--ease)] hover:brightness-95 focus:outline-none disabled:cursor-not-allowed disabled:brightness-90 sm:w-auto"
     >
-      <div className="relative flex items-center justify-center gap-2 sm:gap-3">
-        {pending ? (
-          <>
-            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-            <span className="hidden sm:inline">Creating Session...</span>
-            <span className="sm:hidden">Creating...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
-            <span className="hidden sm:inline">Create Secure Session</span>
-            <span className="sm:hidden">Create Session</span>
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
-          </>
-        )}
-      </div>
+      {pending ? (
+        <>
+          <Loader2 className="spin h-4 w-4" strokeWidth={1.5} />
+          <span>Starting container</span>
+        </>
+      ) : (
+        <span>Open</span>
+      )}
     </button>
+  );
+}
+
+function UrlField() {
+  const { pending } = useFormStatus();
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <label htmlFor="url" className="text-[12px] tracking-[-0.002em] text-fg-3">
+        Website URL
+      </label>
+      <div className="relative">
+        <Globe
+          className="pointer-events-none absolute left-[18px] top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-fg-3"
+          strokeWidth={1.5}
+        />
+        <input
+          type="url"
+          id="url"
+          name="url"
+          required
+          disabled={pending}
+          placeholder="Paste a URL"
+          className="h-14 w-full rounded-xl border border-line bg-surface px-[46px] text-[16px] tracking-[-0.009em] text-fg outline-none transition-[border-color,background,color] duration-200 ease-[var(--ease)] placeholder:text-fg-3 focus:border-accent focus:bg-bg disabled:cursor-not-allowed disabled:text-fg-2"
+        />
+      </div>
+    </div>
   );
 }
 
 export function CreateSessionForm() {
   return (
-    <form action={createSession} className="space-y-4 sm:space-y-6">
-      <div className="relative">
-        <label
-          htmlFor="url"
-          className="text-sm font-semibold text-gray-200 mb-2 sm:mb-3 flex items-center gap-2"
-        >
-          <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-          Website URL
-        </label>
-        <div className="relative group">
-          <input
-            type="url"
-            id="url"
-            name="url"
-            required
-            placeholder="https://example.com"
-            className="w-full px-3 py-3 sm:px-4 sm:py-4 bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 hover:border-gray-500/50 hover:bg-gray-700/50 text-sm sm:text-base"
-          />
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-        </div>
-      </div>
-
+    <form
+      action={createSession}
+      className="flex flex-col gap-3 sm:flex-row sm:items-end"
+    >
+      <UrlField />
       <SubmitButton />
     </form>
   );
