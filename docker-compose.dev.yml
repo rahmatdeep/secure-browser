@@ -41,7 +41,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma && pnpm --filter @secure-browser/backend dev:watch"]
+    command: ["sh", "-c", "pnpm --filter @secure-browser/backend exec prisma migrate deploy && pnpm --filter @secure-browser/backend dev:watch"]
     networks:
       - secure-browser-net
 

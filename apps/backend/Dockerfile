@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/shared ./packages/shared
 COPY apps/backend ./apps/backend
 RUN pnpm --filter @secure-browser/backend exec prisma generate
@@ -27,7 +27,7 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY --from=pruner /app/out/full/ .
 RUN pnpm --filter @secure-browser/backend exec prisma generate

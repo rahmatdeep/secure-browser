@@ -35,6 +35,9 @@ export class DockerManager {
         await this.docker.createNetwork({
           Name: this.networkName,
           Driver: "bridge",
+          Labels: {
+            "com.docker.compose.network": this.networkName,
+          },
         });
         console.log(`Created Docker network: ${this.networkName}`);
       }

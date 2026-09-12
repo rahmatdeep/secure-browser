@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+.pnpm-store
+
+# Version Control
+.git
+.gitignore
+
+# Build outputs
+dist
+apps/*/dist
+.next
+apps/*/.next
+out
+apps/*/out
+.turbo
+*.tsbuildinfo
+
+# Environment and Secrets
+.env
+.env*.local
+*.env
+
+# Operating System & Logs
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Database Volume
+postgres_data

@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY packages/shared ./packages/shared
 COPY apps/frontend ./apps/frontend
 EXPOSE 3000
@@ -26,7 +26,7 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY --from=pruner /app/out/full/ .
 RUN pnpm turbo run build --filter=@secure-browser/frontend...

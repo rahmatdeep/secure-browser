@@ -11,7 +11,7 @@
     "lint": "turbo lint",
     "clean": "turbo clean && rm -rf node_modules apps/*/node_modules packages/*/node_modules",
     "docker:build-browser": "docker build -t vnc-browser-chrome:latest docker/browser",
-    "postinstall": "pnpm --filter @secure-browser/backend db:generate",
+    "postinstall": "node -e \"const fs = require('fs'); if (fs.existsSync('./apps/backend/prisma/schema.prisma')) { require('child_process').execSync('pnpm --filter @secure-browser/backend db:generate', { stdio: 'inherit' }); }\"",
     "db:generate": "pnpm --filter @secure-browser/backend db:generate",
     "db:migrate": "pnpm --filter @secure-browser/backend db:migrate",
     "db:push": "pnpm --filter @secure-browser/backend db:push",
