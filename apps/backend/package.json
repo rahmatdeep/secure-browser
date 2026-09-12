@@ -7,6 +7,7 @@
     "build": "prisma generate && tsc -b",
     "start": "node dist/index.js",
     "dev": "prisma generate && tsc -b && node dist/index.js",
+    "dev:watch": "tsx watch --watch src src/index.ts",
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -21,6 +22,7 @@
     "@secure-browser/shared": "workspace:*",
     "cors": "^2.8.5",
     "dockerode": "^4.0.6",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
@@ -39,6 +41,7 @@
     "@types/ws": "^8.18.1",
     "nodemon": "^3.1.10",
     "supertest": "^7.2.2",
+    "tsx": "^4.23.13",
     "typescript": "^5.8.3",
     "vitest": "^5.0.0"
   }

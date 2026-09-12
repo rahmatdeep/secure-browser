@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config({ path: [".env", "../../.env"] });
+
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import cors from "cors";
@@ -6,6 +9,10 @@ import rateLimit from "express-rate-limit";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import containerRoutes, { containerController } from "./routes/container";
 import { DatabaseService } from "./services/databaseService";
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/secure_browser";
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -55,17 +62,24 @@ const vncProxy = createProxyMiddleware({
       const dockerManager = containerController.getDockerManager();
       const containerInfo = dockerManager.getContainerInfo(containerId);
 
-      // 1. If mapped host port is present (e.g. host dev on macOS), use localhost:<hostPort>
+      // 1. When running inside Docker, route directly over the Docker bridge network
+      if (process.env.DOCKER_NETWORK) {
+        if (containerInfo?.containerIp) {
+          return `http://${containerInfo.containerIp}:6080`;
+        }
+        return `http://vnc-browser-${containerId}:6080`;
+      }
+
+      // 2. When running on host, route via mapped host port
       if (containerInfo?.vncPort && containerInfo.vncPort !== "6080") {
         return `http://127.0.0.1:${containerInfo.vncPort}`;
       }
 
-      // 2. If container IP is known on bridge network (inside Docker), use it directly
+      // 3. Fallback to container IP or Docker internal DNS name
       if (containerInfo?.containerIp) {
         return `http://${containerInfo.containerIp}:6080`;
       }
 
-      // 3. Default to Docker internal DNS name on secure-browser-net
       return `http://vnc-browser-${containerId}:6080`;
     }
     return undefined;
