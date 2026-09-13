@@ -41,7 +41,7 @@ const OVERSCAN = 1.04;
  * Flip the clip horizontally. Safe for abstract footage; never enable it for
  * anything with text, faces, or a handedness to get wrong.
  */
-const MIRROR = true;
+const MIRROR = false;
 
 export function HeroScene() {
   const ref = useRef<HTMLVideoElement>(null);
