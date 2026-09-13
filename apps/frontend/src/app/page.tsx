@@ -30,15 +30,9 @@ export default function Home() {
           <div className="mx-auto flex max-w-[1024px] items-center justify-between border-b border-on-ink/20 pb-4">
             <a
               href="#create"
-              className="group flex items-baseline gap-3 hover:no-underline"
-              aria-label="SafeWeb home"
+              className="text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
             >
-              <span className="text-[15px] font-semibold leading-none tracking-[-0.018em]">
-                SafeWeb
-              </span>
-              <span className="hidden text-[12.5px] leading-none tracking-[-0.006em] text-on-ink-2 sm:inline">
-                disposable browser sessions
-              </span>
+              SafeWeb
             </a>
 
             <span className="hidden font-mono text-[11px] text-on-ink-2 sm:block">
