@@ -23,12 +23,12 @@ function SubmitButton() {
   );
 }
 
-function UrlField({ id }: { id: string }) {
+function UrlField() {
   const { pending } = useFormStatus();
 
   return (
     <>
-      <label htmlFor={id} className="sr-only">
+      <label htmlFor="url" className="sr-only">
         Website URL
       </label>
       <Globe
@@ -37,7 +37,7 @@ function UrlField({ id }: { id: string }) {
       />
       <input
         type="url"
-        id={id}
+        id="url"
         name="url"
         required
         disabled={pending}
@@ -48,8 +48,7 @@ function UrlField({ id }: { id: string }) {
   );
 }
 
-/** `id` keeps the field unique when the page renders more than one form. */
-export function CreateSessionForm({ id = "url" }: { id?: string }) {
+export function CreateSessionForm() {
   return (
     <form
       action={createSession}
@@ -59,7 +58,7 @@ export function CreateSessionForm({ id = "url" }: { id?: string }) {
          the footage happens to be bright. */
       className="flex h-[62px] w-full max-w-[540px] items-center gap-3 rounded-full border border-on-ink/25 bg-on-ink/[0.07] pr-2 pl-[22px] backdrop-blur-md transition-colors duration-200 ease-[var(--ease)] focus-within:border-on-ink/55 focus-within:bg-on-ink/[0.11]"
     >
-      <UrlField id={id} />
+      <UrlField />
       <SubmitButton />
     </form>
   );

@@ -170,11 +170,17 @@ export default async function Home() {
             That is the whole workflow. Close the tab whenever you like; the
             container stops either way.
           </p>
-          {/* The form itself, not a link back to it: someone convinced at the
-              bottom of the page should not be thrown eight screens up. */}
-          <div className="mt-2 flex w-full justify-center">
-            <CreateSessionForm id="url-closing" />
-          </div>
+          {/* Deliberately a link to the field, not a second copy of it. Two
+              uncontrolled inputs share no state, so a URL typed in the hero
+              leaves this one empty and the page appears to have lost it. The
+              anchor is instant and lands on a hero that is one viewport tall,
+              with the field already in view. */}
+          <a
+            href="#create"
+            className="mt-2 flex h-12 items-center justify-center rounded-full bg-on-ink px-[26px] text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
+          >
+            Open a session
+          </a>
         </Reveal>
       </div>
 
