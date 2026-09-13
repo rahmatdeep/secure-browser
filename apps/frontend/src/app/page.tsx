@@ -5,6 +5,8 @@ import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
 import { Aperture } from "@/components/Aperture";
+import { HeroScene } from "@/components/HeroScene";
+import { Scrub } from "@/components/Scrub";
 const STATS: [string, string][] = [
   ["0", "host ports bound. Port 6080 never leaves the bridge network."],
   ["10:00", "until the container stops itself, whether you closed the tab or not."],
@@ -14,63 +16,74 @@ const STATS: [string, string][] = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-bg text-fg">
-      <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
-        <div className="mx-auto flex max-w-[1024px] items-center justify-between border-b border-line pb-4">
-          <a
-            href="#create"
-            className="group flex items-baseline gap-3 hover:no-underline"
-            aria-label="SafeWeb home"
-          >
-            <span className="text-[15px] font-semibold leading-none tracking-[-0.018em]">
-              SafeWeb
+      {/* ── Hero: nav and hero share one field, so the colour runs to the
+             top of the page instead of starting under a white strip ────── */}
+      <Scrub className="relative isolate flex min-h-svh flex-col overflow-hidden text-on-ink">
+        <HeroScene />
+        {/* Scrim, weighted to the left where the type sits. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.13_0.02_265/0.86)_0%,oklch(0.13_0.02_265/0.60)_30%,oklch(0.13_0.02_265/0.20)_62%,oklch(0.13_0.02_265/0.26)_100%)]"
+        />
+
+        <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
+          <div className="mx-auto flex max-w-[1024px] items-center justify-between border-b border-on-ink/20 pb-4">
+            <a
+              href="#create"
+              className="group flex items-baseline gap-3 hover:no-underline"
+              aria-label="SafeWeb home"
+            >
+              <span className="text-[15px] font-semibold leading-none tracking-[-0.018em]">
+                SafeWeb
+              </span>
+              <span className="hidden text-[12.5px] leading-none tracking-[-0.006em] text-on-ink-2 sm:inline">
+                disposable browser sessions
+              </span>
+            </a>
+
+            <span className="hidden font-mono text-[11px] text-on-ink-2 sm:block">
+              bridge-only / 10:00 ttl / no reuse
             </span>
-            <span className="hidden text-[12.5px] leading-none tracking-[-0.006em] text-fg-3 sm:inline">
-              disposable browser sessions
-            </span>
-          </a>
+          </div>
+        </nav>
 
-          <span className="hidden font-mono text-[11px] text-fg-3 sm:block">
-            bridge-only / 10:00 ttl / no reuse
-          </span>
-        </div>
-      </nav>
+        {/* ── Hero: the tool, seen from four rings away ─────────────── */}
+        <section
+          id="create"
+          className="relative flex flex-1 items-center overflow-hidden"
+        >
+          <Aperture />
 
-      {/* ── Hero: the tool, seen from four rings away ─────────────── */}
-      <section
-        id="create"
-        className="relative flex items-center overflow-hidden xl:min-h-[900px]"
-      >
-        <Aperture />
+          {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
+              border-box sizing, putting both on one element insets the content
+              by another 72px and the headline stops hanging on the same left
+              line as the logo and the section rules. */}
+          <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
+            <div className="mx-auto flex w-full max-w-[1024px] flex-col">
+              <div className="flex max-w-[560px] flex-col gap-[26px]">
+                <h1 className="text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
+                  <Lines
+                    lines={["Borrow a", "browser for", "ten minutes."]}
+                    stagger={90}
+                  />
+                </h1>
 
-        {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
-            border-box sizing, putting both on one element insets the content
-            by another 72px and the headline stops hanging on the same left
-            line as the logo and the section rules. */}
-        <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
-          <div className="mx-auto flex w-full max-w-[1024px] flex-col">
-            <div className="flex max-w-[560px] flex-col gap-[26px]">
-              <h1 className="text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
-                <Lines
-                  lines={["Borrow a", "browser for", "ten minutes."]}
-                  stagger={90}
-                />
-              </h1>
+                <p
+                  className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]"
+                  style={{ animationDelay: "260ms" }}
+                >
+                  Paste anything you would rather not open yourself. It loads
+                  inside a throwaway container and reaches you as pixels.
+                </p>
 
-              <p
-                className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-fg-2 sm:text-[18px]"
-                style={{ animationDelay: "260ms" }}
-              >
-                Paste anything you would rather not open yourself. It loads
-                inside a throwaway container and reaches you as pixels.
-              </p>
-
-              <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>
-                <CreateSessionForm />
+                <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>
+                  <CreateSessionForm />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </Scrub>
 
       {/* ── Pinned: how isolation actually works ───────────────────── */}
       <div id="isolation">
