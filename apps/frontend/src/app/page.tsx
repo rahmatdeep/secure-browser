@@ -7,34 +7,6 @@ import { Reveal } from "@/components/Reveal";
 import { Aperture } from "@/components/Aperture";
 import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
-const SPECS: { label: string; value: string; accent?: boolean }[] = [
-  { label: "Ports published", value: "0" },
-  { label: "Session ttl", value: "10:00", accent: true },
-  { label: "Containers", value: "1 per session" },
-  { label: "Reuse", value: "Never" },
-];
-
-/** One spec, in the chrome vocabulary the rest of the page already uses:
- *  mono, uppercase, wide tracking, label over value. */
-function Spec({ label, value, accent }: (typeof SPECS)[number]) {
-  return (
-    <div className="flex flex-col gap-[5px]">
-      <span className="font-mono text-[10px] tracking-[0.09em] uppercase text-on-ink/40">
-        {label}
-      </span>
-      <span
-        /* A lighter tint of --accent: the token is mixed for near-white and
-           goes muddy against the footage. */
-        className={`font-mono text-[12px] tracking-[0.04em] uppercase ${
-          accent ? "text-[oklch(0.74_0.13_255)]" : "text-on-ink"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <main className="min-h-screen bg-bg text-fg">
@@ -98,14 +70,6 @@ export default function Home() {
         >
           <Aperture />
 
-          {/* The rail sits at the page's outer padding edge, outside the 1024
-              track, so it reads as marginalia rather than part of the column. */}
-          <div className="absolute top-1/2 left-[72px] hidden -translate-y-1/2 flex-col gap-[18px] 2xl:flex">
-            {SPECS.map((spec) => (
-              <Spec key={spec.label} {...spec} />
-            ))}
-          </div>
-
           {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
               border-box sizing, putting both on one element insets the content
               by another 72px and the headline stops hanging on the same left
@@ -139,16 +103,6 @@ export default function Home() {
                   <CreateSessionForm />
                 </div>
 
-                {/* Below 2xl there is no room for the rail beside the content
-                    column, so the same specs run as a row under the form. */}
-                <div
-                  className="rise mt-3 flex flex-wrap gap-x-9 gap-y-4 2xl:hidden"
-                  style={{ animationDelay: "420ms" }}
-                >
-                  {SPECS.map((spec) => (
-                    <Spec key={spec.label} {...spec} />
-                  ))}
-                </div>
               </div>
             </div>
           </div>
