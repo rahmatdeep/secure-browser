@@ -12,7 +12,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       aria-label="Open a session"
-      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-accent text-white transition-[filter] duration-200 ease-[var(--ease)] hover:brightness-95 focus:outline-none disabled:cursor-not-allowed disabled:brightness-90"
+      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full border border-on-ink/30 bg-on-ink/10 text-on-ink transition-colors duration-200 ease-[var(--ease)] hover:border-on-ink/55 hover:bg-on-ink/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
         <Loader2 className="spin h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -32,7 +32,7 @@ function UrlField() {
         Website URL
       </label>
       <Globe
-        className="pointer-events-none h-[18px] w-[18px] shrink-0 text-fg-3"
+        className="pointer-events-none h-[18px] w-[18px] shrink-0 text-on-ink/50"
         strokeWidth={1.5}
       />
       <input
@@ -42,7 +42,7 @@ function UrlField() {
         required
         disabled={pending}
         placeholder="Paste a URL"
-        className="min-w-0 flex-1 bg-transparent text-[16.5px] tracking-[-0.009em] text-fg outline-none placeholder:text-fg-3 disabled:cursor-not-allowed disabled:text-fg-2"
+        className="min-w-0 flex-1 bg-transparent text-[16.5px] tracking-[-0.009em] text-on-ink caret-on-ink outline-none placeholder:text-on-ink/50 disabled:cursor-not-allowed disabled:text-on-ink/60"
       />
     </>
   );
@@ -52,9 +52,11 @@ export function CreateSessionForm() {
   return (
     <form
       action={createSession}
-      /* One pill: the field and its action read as a single object rather than
-         a labelled form, which is what kept the old hero looking like a pitch. */
-      className="flex h-[62px] w-full max-w-[540px] items-center gap-2.5 rounded-full border border-line bg-bg pr-2 pl-[22px] shadow-[0_1px_2px_oklch(0.2_0.01_255/0.05),0_16px_34px_-22px_oklch(0.2_0.01_255/0.24)] transition-[border-color] duration-200 ease-[var(--ease)] focus-within:border-accent"
+      /* One pill, drawn as glass rather than a solid panel: the submit sits
+         inside the field, so an outlined button needs an outlined field or the
+         white arrow lands on white. Blurred, so type stays legible wherever
+         the footage happens to be bright. */
+      className="flex h-[62px] w-full max-w-[540px] items-center gap-3 rounded-full border border-on-ink/25 bg-on-ink/[0.07] pr-2 pl-[22px] backdrop-blur-md transition-colors duration-200 ease-[var(--ease)] focus-within:border-on-ink/55 focus-within:bg-on-ink/[0.11]"
     >
       <UrlField />
       <SubmitButton />
