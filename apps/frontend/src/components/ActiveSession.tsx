@@ -23,16 +23,14 @@ function parseUrl(url: string) {
  *  itself, which meant two calls per render once the hero needed the count. */
 export function ActiveSessions({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
-    /* One row, not a 400px panel. This is the state most visitors see, and it
-       used to spend more vertical space than the list it stands in for. */
+    /* Prose, not a bordered row. A border says rows go here, so an empty one
+       reads as a slot waiting to be filled rather than a settled state — and
+       the heading has already said nothing is running, so a box repeating it
+       is chrome around nothing. */
     return (
-      <div className="flex items-center gap-3.5 rounded-2xl border border-line bg-bg px-[30px] py-[22px]">
-        <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-line" />
-        <span className="text-[14.5px] tracking-[-0.008em] text-fg-2">
-          That is the resting state, and the one you should see most of the
-          time.
-        </span>
-      </div>
+      <p className="max-w-[460px] text-[16px] leading-[1.55] tracking-[-0.008em] text-fg-2">
+        That is the resting state, and the one you should see most of the time.
+      </p>
     );
   }
 
