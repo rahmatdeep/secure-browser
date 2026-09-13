@@ -22,7 +22,7 @@ export default async function Home() {
         {/* Scrim, weighted to the left where the type sits. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.88)_0%,oklch(0.12_0.004_60/0.62)_32%,oklch(0.12_0.004_60/0.22)_64%,oklch(0.12_0.004_60/0.28)_100%)]"
+          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.72)_0%,oklch(0.12_0.004_60/0.44)_30%,oklch(0.12_0.004_60/0.10)_60%,oklch(0.12_0.004_60/0.16)_100%)]"
         />
 
         {/* No rule under the nav: a line ruled across footage was the one piece
