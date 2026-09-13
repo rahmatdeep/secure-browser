@@ -137,7 +137,11 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 Streaming
               </span>
             </div>
-            <StopSessionButton containerId={containerId} variant="light" />
+            <StopSessionButton
+              containerId={containerId}
+              variant="light"
+              redirectTo="/"
+            />
           </div>
         </div>
       </div>
