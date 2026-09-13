@@ -1,7 +1,7 @@
 "use client";
 
 import { createSession } from "@/actions/sessionActions";
-import { Globe, Loader2 } from "lucide-react";
+import { ArrowRight, Globe, Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
 function SubmitButton() {
@@ -11,15 +11,13 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-accent px-6 text-[15px] font-medium tracking-[-0.011em] text-white transition-[filter,background] duration-200 ease-[var(--ease)] hover:brightness-95 focus:outline-none disabled:cursor-not-allowed disabled:brightness-90 sm:w-auto"
+      aria-label="Open a session"
+      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-accent text-white transition-[filter] duration-200 ease-[var(--ease)] hover:brightness-95 focus:outline-none disabled:cursor-not-allowed disabled:brightness-90"
     >
       {pending ? (
-        <>
-          <Loader2 className="spin h-4 w-4" strokeWidth={1.5} />
-          <span>Starting container</span>
-        </>
+        <Loader2 className="spin h-[18px] w-[18px]" strokeWidth={1.5} />
       ) : (
-        <span>Open</span>
+        <ArrowRight className="h-[18px] w-[18px]" strokeWidth={1.5} />
       )}
     </button>
   );
@@ -29,26 +27,24 @@ function UrlField() {
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-2">
-      <label htmlFor="url" className="text-[12px] tracking-[-0.002em] text-fg-3">
+    <>
+      <label htmlFor="url" className="sr-only">
         Website URL
       </label>
-      <div className="relative">
-        <Globe
-          className="pointer-events-none absolute left-[18px] top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-fg-3"
-          strokeWidth={1.5}
-        />
-        <input
-          type="url"
-          id="url"
-          name="url"
-          required
-          disabled={pending}
-          placeholder="Paste a URL"
-          className="h-14 w-full rounded-xl border border-line bg-surface px-[46px] text-[16px] tracking-[-0.009em] text-fg outline-none transition-[border-color,background,color] duration-200 ease-[var(--ease)] placeholder:text-fg-3 focus:border-accent focus:bg-bg disabled:cursor-not-allowed disabled:text-fg-2"
-        />
-      </div>
-    </div>
+      <Globe
+        className="pointer-events-none h-[18px] w-[18px] shrink-0 text-fg-3"
+        strokeWidth={1.5}
+      />
+      <input
+        type="url"
+        id="url"
+        name="url"
+        required
+        disabled={pending}
+        placeholder="Paste a URL"
+        className="min-w-0 flex-1 bg-transparent text-[16.5px] tracking-[-0.009em] text-fg outline-none placeholder:text-fg-3 disabled:cursor-not-allowed disabled:text-fg-2"
+      />
+    </>
   );
 }
 
@@ -56,7 +52,9 @@ export function CreateSessionForm() {
   return (
     <form
       action={createSession}
-      className="flex flex-col gap-3 sm:flex-row sm:items-end"
+      /* One pill: the field and its action read as a single object rather than
+         a labelled form, which is what kept the old hero looking like a pitch. */
+      className="flex h-[62px] w-full max-w-[540px] items-center gap-2.5 rounded-full border border-line bg-bg pr-2 pl-[22px] shadow-[0_1px_2px_oklch(0.2_0.01_255/0.05),0_16px_34px_-22px_oklch(0.2_0.01_255/0.24)] transition-[border-color] duration-200 ease-[var(--ease)] focus-within:border-accent"
     >
       <UrlField />
       <SubmitButton />
