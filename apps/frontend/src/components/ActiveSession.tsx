@@ -19,21 +19,13 @@ function parseUrl(url: string) {
   }
 }
 
-/** The page fetches once and passes the result down; this used to fetch for
- *  itself, which meant two calls per render once the hero needed the count. */
+/** Renders a list. Whether there is a list to render is the page's call — an
+ *  empty state belongs to the section, not to the component that draws rows.
+ *
+ *  The page also fetches once and passes the result down; this used to fetch
+ *  for itself, which meant two calls per render once the hero needed a count.
+ */
 export function ActiveSessions({ sessions }: { sessions: Session[] }) {
-  if (sessions.length === 0) {
-    /* Prose, not a bordered row. A border says rows go here, so an empty one
-       reads as a slot waiting to be filled rather than a settled state — and
-       the heading has already said nothing is running, so a box repeating it
-       is chrome around nothing. */
-    return (
-      <p className="max-w-[460px] text-[16px] leading-[1.55] tracking-[-0.008em] text-fg-2">
-        That is the resting state, and the one you should see most of the time.
-      </p>
-    );
-  }
-
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-line">
       {sessions.map((session, index) => {
