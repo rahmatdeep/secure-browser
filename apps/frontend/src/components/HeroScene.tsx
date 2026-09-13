@@ -12,30 +12,36 @@ import { useEffect, useRef } from "react";
  * a ken-burns drift over moving footage reads as a wobble.
  *
  * Playback stops whenever nothing is watching: off-screen, on a hidden tab,
- * and under prefers-reduced-motion, where it holds the first frame so the
- * hero keeps its image and loses only the movement.
- *
- * The ink backdrop is what shows until the first frame paints. There is no
- * poster attribute because this machine has no ffmpeg to cut one; adding one
- * later is a drop-in and would remove that gap.
+ * and under prefers-reduced-motion, where the poster stands in for the video
+ * so the hero keeps its image and loses only the movement.
  */
+
 /**
- * Where the clip's subject sits, as a percentage nudge.
+ * Where the clip's subject sits, as a percentage nudge. Positive moves it
+ * RIGHT, away from the headline.
  *
  * The frame is wider than 16:9, so object-cover crops top and bottom only and
  * object-position has no horizontal effect — moving a subject sideways means
- * scaling up and translating.
+ * scaling up and translating, which costs sharpness. Abstract footage has no
+ * subject to dodge, so this is 0 and OVERSCAN stays near 1: the frame is seen
+ * whole. Retune only if a clip puts something identifiable behind the type.
  *
- * Order matters, and getting it wrong exposed the clip's left edge: in
- * `scale() translateX()` the translate happens inside the scaled coordinate
- * system, so a 13% nudge really moves 1.28 x 13%. Translating FIRST keeps the
- * percentage honest against the element's own width. Scale then only has to
- * out-run the shift itself — 1.32 overflows 16% a side against a 13% nudge.
- *
- * This is the one number to retune when the footage changes. Positive moves
- * the subject RIGHT, away from the headline.
+ * Order matters. In `scale() translateX()` the translate happens inside the
+ * scaled coordinate system, so the nudge is silently multiplied by the scale
+ * and can overrun the overflow meant to hide the clip's edge. Translating
+ * first keeps the percentage honest against the element's own width — and
+ * keeps "positive means right" true regardless of MIRROR.
  */
-const FOCUS_SHIFT = "13%";
+const FOCUS_SHIFT = "0%";
+
+/** Just enough overscan to keep the clip's own edges out of frame. */
+const OVERSCAN = 1.04;
+
+/**
+ * Flip the clip horizontally. Safe for abstract footage; never enable it for
+ * anything with text, faces, or a handedness to get wrong.
+ */
+const MIRROR = true;
 
 export function HeroScene() {
   const ref = useRef<HTMLVideoElement>(null);
@@ -55,7 +61,7 @@ export function HeroScene() {
     const sync = () => {
       if (visible && onScreen) {
         // Autoplay can still be refused (power saving, platform policy); the
-        // backdrop and scrim stand on their own if it is.
+        // poster and scrim stand on their own if it is.
         void video.play().catch(() => {});
       } else {
         video.pause();
@@ -95,13 +101,18 @@ export function HeroScene() {
         <video
           ref={ref}
           src="/hero.mp4"
+          poster="/hero-poster.webp"
           autoPlay
           muted
           loop
           playsInline
           preload="auto"
           tabIndex={-1}
-          style={{ transform: `translateX(${FOCUS_SHIFT}) scale(1.32)` }}
+          style={{
+            transform: `translateX(${FOCUS_SHIFT}) scale(${
+              MIRROR ? -OVERSCAN : OVERSCAN
+            }, ${OVERSCAN})`,
+          }}
           className="h-full w-full object-cover"
         />
       </div>
