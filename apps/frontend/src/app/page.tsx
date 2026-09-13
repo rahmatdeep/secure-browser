@@ -17,7 +17,7 @@ export default function Home() {
         {/* Scrim, weighted to the left where the type sits. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.13_0.02_265/0.86)_0%,oklch(0.13_0.02_265/0.60)_30%,oklch(0.13_0.02_265/0.20)_62%,oklch(0.13_0.02_265/0.26)_100%)]"
+          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.88)_0%,oklch(0.12_0.004_60/0.62)_32%,oklch(0.12_0.004_60/0.22)_64%,oklch(0.12_0.004_60/0.28)_100%)]"
         />
 
         {/* No rule under the nav: a line ruled across footage was the one piece
@@ -76,7 +76,7 @@ export default function Home() {
               line as the logo and the section rules. */}
           <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
             <div className="mx-auto flex w-full max-w-[1024px] flex-col">
-              <div className="flex max-w-[560px] flex-col gap-[26px]">
+              <div className="flex max-w-[560px] flex-col gap-[26px] [text-shadow:0_1px_32px_oklch(0.1_0.01_60/0.6)]">
                 <div className="rise flex items-center gap-3.5">
                   <span className="h-px w-8 bg-on-ink/40" />
                   <span className="font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2">
