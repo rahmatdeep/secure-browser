@@ -4,7 +4,7 @@ import { IsolationSequence } from "@/components/IsolationSequence";
 import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
-import { ArrowDown } from "lucide-react";
+import { Aperture } from "@/components/Aperture";
 const STATS: [string, string][] = [
   ["0", "host ports bound. Port 6080 never leaves the bridge network."],
   ["10:00", "until the container stops itself, whether you closed the tab or not."],
@@ -35,48 +35,41 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ── Hero: the tool itself, not a pitch for it ──────────────── */}
+      {/* ── Hero: the tool, seen from four rings away ─────────────── */}
       <section
         id="create"
-        className="mx-auto flex max-w-[1024px] flex-col items-center gap-[30px] px-5 pt-24 text-center sm:px-[72px] sm:pt-[120px]"
+        className="relative flex items-center overflow-hidden xl:min-h-[900px]"
       >
-        <div className="rise flex items-center gap-[9px] rounded-full border border-line bg-surface py-[7px] pl-[11px] pr-[15px]">
-          <span className="h-1.5 w-1.5 rounded-full bg-fg-3" />
-          <span className="text-[12.5px] tracking-[-0.004em] text-fg-2">
-            One container per URL. No reuse.
-          </span>
+        <Aperture />
+
+        {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
+            border-box sizing, putting both on one element insets the content
+            by another 72px and the headline stops hanging on the same left
+            line as the logo and the section rules. */}
+        <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
+          <div className="mx-auto flex w-full max-w-[1024px] flex-col">
+            <div className="flex max-w-[560px] flex-col gap-[26px]">
+              <h1 className="text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
+                <Lines
+                  lines={["Borrow a", "browser for", "ten minutes."]}
+                  stagger={90}
+                />
+              </h1>
+
+              <p
+                className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-fg-2 sm:text-[18px]"
+                style={{ animationDelay: "260ms" }}
+              >
+                Paste anything you would rather not open yourself. It loads
+                inside a throwaway container and reaches you as pixels.
+              </p>
+
+              <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>
+                <CreateSessionForm />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <h1 className="max-w-[940px] text-[clamp(44px,8.5vw,84px)] font-semibold leading-[0.95] tracking-[-0.045em]">
-          <Lines
-            lines={["A browser that doesn't", "outlive the tab."]}
-            stagger={90}
-          />
-        </h1>
-
-        <p
-          className="rise max-w-[560px] text-[17px] leading-[1.55] tracking-[-0.009em] text-fg-2 sm:text-[19px]"
-          style={{ animationDelay: "260ms" }}
-        >
-          Paste anything you would rather not open yourself. It loads inside a
-          throwaway container and reaches you as pixels.
-        </p>
-
-        <div
-          className="rise mt-2 w-full max-w-[620px]"
-          style={{ animationDelay: "340ms" }}
-        >
-          <CreateSessionForm />
-        </div>
-
-        <a
-          href="#isolation"
-          className="rise mt-10 flex flex-col items-center gap-2 text-[13px] tracking-[-0.004em] text-fg-3 hover:no-underline"
-          style={{ animationDelay: "460ms" }}
-        >
-          See what happens to it
-          <ArrowDown className="h-[15px] w-[15px] animate-[breathe_2600ms_ease-in-out_infinite]" strokeWidth={1.5} />
-        </a>
       </section>
 
       {/* ── Pinned: how isolation actually works ───────────────────── */}
