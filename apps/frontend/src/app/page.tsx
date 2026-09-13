@@ -1,5 +1,6 @@
 import { CreateSessionForm } from "@/components/CreateSessionForm";
-import { ActiveSessions } from "@/components/ActiveSession";
+import { ActiveSessions, type Session } from "@/components/ActiveSession";
+import { getActiveSessions } from "@/actions/sessionActions";
 import { IsolationSequence } from "@/components/IsolationSequence";
 import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
@@ -7,7 +8,11 @@ import { Reveal } from "@/components/Reveal";
 import { Aperture } from "@/components/Aperture";
 import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
-export default function Home() {
+import { ArrowRight } from "lucide-react";
+export default async function Home() {
+  const sessions: Session[] = await getActiveSessions();
+  const running = sessions.length;
+
   return (
     <main className="min-h-screen bg-bg text-fg">
       {/* ── Hero: nav and hero share one field, so the colour runs to the
@@ -103,6 +108,21 @@ export default function Home() {
                   <CreateSessionForm />
                 </div>
 
+                {/* Only for the person it matters to. The list lives seven
+                    screens down, which is right for a first visit and useless
+                    for someone coming back to a session they left open. */}
+                {running > 0 && (
+                  <a
+                    href="#sessions"
+                    className="rise flex items-center gap-2.5 font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2 transition-colors duration-200 hover:text-on-ink hover:no-underline"
+                    style={{ animationDelay: "420ms" }}
+                  >
+                    <span className="live-dot h-[6px] w-[6px] rounded-full bg-[oklch(0.74_0.13_255)]" />
+                    {running} session{running === 1 ? "" : "s"} running
+                    <ArrowRight className="h-[13px] w-[13px]" strokeWidth={1.5} />
+                  </a>
+                )}
+
               </div>
             </div>
           </div>
@@ -120,21 +140,24 @@ export default function Home() {
       </div>
 
       {/* ── Sessions ───────────────────────────────────────────────── */}
-      <section
-        id="sessions"
-        className="mx-auto flex max-w-[1024px] flex-col gap-[22px] px-5 pt-24 sm:px-[72px]"
-      >
-        <Reveal className="flex flex-col gap-3.5">
-          <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-fg-3">
-            Sessions
-          </span>
-          <h2 className="max-w-[620px] text-[44px] font-semibold leading-[1.04] tracking-[-0.038em]">
-            Everything currently running.
-          </h2>
-        </Reveal>
-        <Reveal delay={60}>
-          <ActiveSessions />
-        </Reveal>
+      <section id="sessions" className="px-5 pt-24 sm:px-[72px]">
+        <div className="mx-auto flex max-w-[1024px] flex-col gap-[22px]">
+          <Reveal className="flex flex-col gap-3.5">
+            <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-fg-3">
+              Sessions
+            </span>
+            {/* The heading used to promise a list and then be contradicted by
+                an empty box directly under it. */}
+            <h2 className="max-w-[620px] text-[44px] font-semibold leading-[1.04] tracking-[-0.038em]">
+              {running > 0
+                ? "Everything currently running."
+                : "Nothing is running."}
+            </h2>
+          </Reveal>
+          <Reveal delay={60}>
+            <ActiveSessions sessions={sessions} />
+          </Reveal>
+        </div>
       </section>
 
       {/* ── Closing ────────────────────────────────────────────────── */}
@@ -147,22 +170,23 @@ export default function Home() {
             That is the whole workflow. Close the tab whenever you like; the
             container stops either way.
           </p>
-          <a
-            href="#create"
-            className="mt-2 flex h-12 items-center justify-center rounded-full bg-on-ink px-[26px] text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
-          >
-            Open a session
-          </a>
+          {/* The form itself, not a link back to it: someone convinced at the
+              bottom of the page should not be thrown eight screens up. */}
+          <div className="mt-2 flex w-full justify-center">
+            <CreateSessionForm id="url-closing" />
+          </div>
         </Reveal>
       </div>
 
-      <footer className="mx-auto mt-14 flex max-w-[1024px] flex-col justify-between gap-4 border-t border-line px-5 pb-11 pt-[30px] sm:flex-row sm:px-[72px]">
-        <span className="text-[13px] tracking-[-0.004em] text-fg-3">
-          SafeWeb - isolated, disposable browsing.
-        </span>
-        <span className="font-mono text-[12px] text-fg-3">
-          vnc-browser-chrome:latest
-        </span>
+      <footer className="mt-14 px-5 sm:px-[72px]">
+        <div className="mx-auto flex max-w-[1024px] flex-col justify-between gap-4 border-t border-line pb-11 pt-[30px] sm:flex-row">
+          <span className="text-[13px] tracking-[-0.004em] text-fg-3">
+            SafeWeb - isolated, disposable browsing.
+          </span>
+          <span className="font-mono text-[12px] text-fg-3">
+            vnc-browser-chrome:latest
+          </span>
+        </div>
       </footer>
     </main>
   );

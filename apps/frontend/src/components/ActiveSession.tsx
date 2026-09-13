@@ -1,7 +1,11 @@
-import { getActiveSessions } from "@/actions/sessionActions";
+import type { ContainerSummary } from "@secure-browser/shared";
 import { SessionCountdown } from "./SessionCountdown";
 import { StopSessionButton } from "./StopSessionButton";
-import { Monitor } from "lucide-react";
+
+/** ContainerSummary as it survives JSON: createdAt arrives as a string. */
+export type Session = Omit<ContainerSummary, "createdAt"> & {
+  createdAt: string;
+};
 
 function parseUrl(url: string) {
   try {
@@ -15,36 +19,26 @@ function parseUrl(url: string) {
   }
 }
 
-export async function ActiveSessions() {
-  const sessions = await getActiveSessions();
-
+/** The page fetches once and passes the result down; this used to fetch for
+ *  itself, which meant two calls per render once the hero needed the count. */
+export function ActiveSessions({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
+    /* One row, not a 400px panel. This is the state most visitors see, and it
+       used to spend more vertical space than the list it stands in for. */
     return (
-      <div className="flex flex-col items-center justify-center gap-[18px] rounded-2xl border border-line bg-bg px-10 py-24 text-center sm:py-32">
-        <Monitor className="h-[34px] w-[34px] text-fg-3" strokeWidth={1.5} />
-        <h3 className="text-[21px] font-medium leading-[1.25] tracking-[-0.022em] text-fg">
-          Nothing is running.
-        </h3>
-        <p className="max-w-[340px] text-[14.5px] leading-[1.55] tracking-[-0.008em] text-fg-2">
+      <div className="flex items-center gap-3.5 rounded-2xl border border-line bg-bg px-[30px] py-[22px]">
+        <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-line" />
+        <span className="text-[14.5px] tracking-[-0.008em] text-fg-2">
           That is the resting state, and the one you should see most of the
           time.
-        </p>
+        </span>
       </div>
     );
   }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-line">
-      {sessions.map(
-        (
-          session: {
-            containerId: string;
-            url: string;
-            vncPort: string | number;
-            createdAt: string;
-          },
-          index: number
-        ) => {
+      {sessions.map((session, index) => {
           const url = parseUrl(session.url);
 
           return (
@@ -96,9 +90,8 @@ export async function ActiveSessions() {
                 <StopSessionButton containerId={session.containerId} />
               </div>
             </div>
-          );
-        }
-      )}
+        );
+      })}
     </div>
   );
 }
