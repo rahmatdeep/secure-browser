@@ -154,9 +154,14 @@ export default async function Home() {
                 : "Nothing is running."}
             </h2>
           </Reveal>
-          <Reveal delay={60}>
-            <ActiveSessions sessions={sessions} />
-          </Reveal>
+          {/* Nothing follows the heading when nothing is running. "Nothing is
+              running." is the whole statement; the note that used to sit under
+              it explained something no one had asked. */}
+          {running > 0 && (
+            <Reveal delay={60}>
+              <ActiveSessions sessions={sessions} />
+            </Reveal>
+          )}
         </div>
       </section>
 
