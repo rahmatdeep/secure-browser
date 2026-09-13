@@ -19,6 +19,24 @@ import { useEffect, useRef } from "react";
  * poster attribute because this machine has no ffmpeg to cut one; adding one
  * later is a drop-in and would remove that gap.
  */
+/**
+ * Where the clip's subject sits, as a percentage nudge.
+ *
+ * The frame is wider than 16:9, so object-cover crops top and bottom only and
+ * object-position has no horizontal effect — moving a subject sideways means
+ * scaling up and translating.
+ *
+ * Order matters, and getting it wrong exposed the clip's left edge: in
+ * `scale() translateX()` the translate happens inside the scaled coordinate
+ * system, so a 13% nudge really moves 1.28 x 13%. Translating FIRST keeps the
+ * percentage honest against the element's own width. Scale then only has to
+ * out-run the shift itself — 1.32 overflows 16% a side against a 13% nudge.
+ *
+ * This is the one number to retune when the footage changes. Positive moves
+ * the subject RIGHT, away from the headline.
+ */
+const FOCUS_SHIFT = "13%";
+
 export function HeroScene() {
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -83,7 +101,8 @@ export function HeroScene() {
           playsInline
           preload="auto"
           tabIndex={-1}
-          className="h-full w-full scale-105 object-cover"
+          style={{ transform: `translateX(${FOCUS_SHIFT}) scale(1.32)` }}
+          className="h-full w-full object-cover"
         />
       </div>
     </div>
