@@ -1,7 +1,8 @@
 "use client";
 
 import { SESSION_TIMEOUT_MS } from "@secure-browser/shared";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface SessionCountdownProps {
   createdAt?: string | Date;
@@ -38,6 +39,27 @@ export function SessionCountdown({
 
     return () => window.clearInterval(interval);
   }, [createdAt]);
+
+  /**
+   * The list and the session header are server-rendered and only re-render
+   * when revalidatePath fires — which createSession and stopSession do, but
+   * the backend's own ten-minute timer does not. Left alone, an expired
+   * session sits there reading 00:00 with a live dot and a View button
+   * pointing at a container that is gone.
+   *
+   * Refreshing the route when the clock runs out lets the server drop the row.
+   * Once per mount: the guard stops a session the server has not yet reaped
+   * from refreshing in a loop. Decorative countdowns have no createdAt and
+   * must not touch the router.
+   */
+  const router = useRouter();
+  const refreshed = useRef(false);
+
+  useEffect(() => {
+    if (!createdAt || remaining > 0 || refreshed.current) return;
+    refreshed.current = true;
+    router.refresh();
+  }, [createdAt, remaining, router]);
 
   const ended = remaining <= 0;
   const fraction = Math.max(0, Math.min(1, remaining / SESSION_TIMEOUT_MS));
