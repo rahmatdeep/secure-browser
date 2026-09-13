@@ -77,5 +77,27 @@ describe("Backend API Endpoints (Characterization Tests)", () => {
       expect(response.body).toHaveProperty("success", true);
       expect(Array.isArray(response.body.data)).toBe(true);
     });
+
+    it("should accept x-guest-token and return filtered active containers", async () => {
+      const response = await request(app)
+        .get("/api/containers")
+        .set("x-guest-token", "test-guest-token-abc");
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+    });
+  });
+
+  describe("VNC Proxy Authorization Guard", () => {
+    it("should return 403 when accessing VNC proxy for an unauthorized or non-existent session", async () => {
+      const response = await request(app).get(
+        "/api/containers/non-existent-session-123/vnc/vnc_lite.html"
+      );
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({
+        success: false,
+        error: "Unauthorized access to session",
+      });
+    });
   });
 });

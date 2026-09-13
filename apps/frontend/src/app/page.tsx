@@ -2,6 +2,8 @@ import { CreateSessionForm } from "@/components/CreateSessionForm";
 import { ActiveSessions } from "@/components/ActiveSession";
 import { Shield, Zap, Lock, Globe } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">

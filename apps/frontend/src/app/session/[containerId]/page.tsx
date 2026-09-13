@@ -11,6 +11,7 @@ import {
 import { headers } from "next/headers";
 import axios from "axios";
 import { isMobileUserAgent } from "@secure-browser/shared";
+import { getGuestToken } from "@/lib/auth";
 
 interface SessionPageProps {
   params: Promise<{
@@ -18,7 +19,7 @@ interface SessionPageProps {
   }>;
 }
 
-async function getSessionInfo(containerId: string) {
+async function getSessionInfo(containerId: string, guestToken: string) {
   const API_BASE =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -30,6 +31,7 @@ async function getSessionInfo(containerId: string) {
       {
         headers: {
           "Cache-Control": "no-cache",
+          "x-guest-token": guestToken,
         },
       }
     );
@@ -42,7 +44,8 @@ async function getSessionInfo(containerId: string) {
 
 export default async function SessionPage({ params }: SessionPageProps) {
   const { containerId } = await params;
-  const session = await getSessionInfo(containerId);
+  const guestToken = await getGuestToken();
+  const session = await getSessionInfo(containerId, guestToken);
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
   const isMobile = isMobileUserAgent(userAgent);
@@ -173,7 +176,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                   : `${apiBase}${session.vncUrl}`;
                 return (
                   <iframe
-                    src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&autoconnect=true&resize=scale&quality=6&compression=6`}
+                    src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&token=${encodeURIComponent(guestToken)}&autoconnect=true&resize=scale&quality=6&compression=6`}
                     className="absolute top-0 left-0 w-full h-full border-0"
                     title="VNC Session"
                     style={{

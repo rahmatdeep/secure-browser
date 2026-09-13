@@ -12,12 +12,14 @@ model ContainerSession {
     containerId String         @unique
     targetUrl   String
     vncPort     String
+    guestToken  String?
     status      SessionStatus  @default(ACTIVE)
     createdAt   DateTime       @default(now())
     endedAt     DateTime?
     duration    Int? // in seconds
     logs        ContainerLog[]
 
+    @@index([guestToken])
     @@map("container_sessions")
 }
 

@@ -12,12 +12,18 @@ export class DatabaseService {
   }
 
   // Container session operations
-  async createSession(containerId: string, targetUrl: string, vncPort: string) {
+  async createSession(
+    containerId: string,
+    targetUrl: string,
+    vncPort: string,
+    guestToken?: string
+  ) {
     return await this.prisma.containerSession.create({
       data: {
         containerId,
         targetUrl,
         vncPort,
+        guestToken,
       },
     });
   }

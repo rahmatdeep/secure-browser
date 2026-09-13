@@ -16,6 +16,11 @@ export class ContainerController {
     try {
       const { url } = req.body;
       const userAgent = req.get("User-Agent") || "";
+      const guestToken =
+        (req.headers["x-guest-token"] as string) ||
+        req.body.guestToken ||
+        undefined;
+
       if (!url) {
         res.status(400).json({ success: false, error: "URL is required" });
         return;
@@ -30,7 +35,8 @@ export class ContainerController {
 
       const containerInfo = await this.dockerManager.createContainer(
         url,
-        userAgent
+        userAgent,
+        guestToken
       );
 
       res.json({
@@ -54,8 +60,12 @@ export class ContainerController {
   ): Promise<void> {
     try {
       const { containerId } = req.params;
+      const guestToken =
+        (req.headers["x-guest-token"] as string) ||
+        (req.query.token as string) ||
+        undefined;
 
-      const success = await this.dockerManager.stopContainer(containerId);
+      const success = await this.dockerManager.stopContainer(containerId, guestToken);
 
       if (success) {
         res.json({ success: true, message: "Container stopped" });
@@ -76,8 +86,12 @@ export class ContainerController {
   ): Promise<void> {
     try {
       const { containerId } = req.params;
+      const guestToken =
+        (req.headers["x-guest-token"] as string) ||
+        (req.query.token as string) ||
+        undefined;
 
-      const containerInfo = this.dockerManager.getContainerInfo(containerId);
+      const containerInfo = this.dockerManager.getContainerInfo(containerId, guestToken);
 
       if (containerInfo) {
         res.json({
@@ -106,7 +120,11 @@ export class ContainerController {
     res: Response<ApiResponse>
   ): Promise<void> {
     try {
-      const containers = this.dockerManager.listActiveContainers();
+      const guestToken =
+        (req.headers["x-guest-token"] as string) ||
+        (req.query.token as string) ||
+        undefined;
+      const containers = this.dockerManager.listActiveContainers(guestToken);
       res.json({
         success: true,
         data: containers,

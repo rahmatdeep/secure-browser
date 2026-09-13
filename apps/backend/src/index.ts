@@ -59,8 +59,20 @@ const vncProxy = createProxyMiddleware({
     const match = rawUrl.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
     if (match) {
       const containerId = match[1];
+      let token: string | undefined;
+      try {
+        const parsedUrl = new URL(rawUrl, "http://localhost");
+        token = parsedUrl.searchParams.get("token") || undefined;
+      } catch {}
+      if (!token) {
+        token = (req as any).headers?.["x-guest-token"] as string | undefined;
+      }
+
       const dockerManager = containerController.getDockerManager();
-      const containerInfo = dockerManager.getContainerInfo(containerId);
+      const containerInfo = dockerManager.getContainerInfo(containerId, token);
+      if (!containerInfo) {
+        return undefined;
+      }
 
       // 1. When running inside Docker, route directly over the Docker bridge network
       if (process.env.DOCKER_NETWORK) {
@@ -90,8 +102,28 @@ const vncProxy = createProxyMiddleware({
   },
 });
 
-// Mount the VNC proxy before express.json() so streams/payloads are untouched
-app.use("/api/containers/:containerId/vnc", vncProxy);
+// Mount the VNC proxy before express.json() with authorization check
+app.use(
+  "/api/containers/:containerId/vnc",
+  (req: Request, res: Response, next: NextFunction) => {
+    const containerId = String(req.params.containerId);
+    const token =
+      (typeof req.query.token === "string" ? req.query.token : undefined) ||
+      (typeof req.headers["x-guest-token"] === "string"
+        ? req.headers["x-guest-token"]
+        : undefined);
+    const dockerManager = containerController.getDockerManager();
+    const containerInfo = dockerManager.getContainerInfo(containerId, token);
+    if (!containerInfo) {
+      res
+        .status(403)
+        .json({ success: false, error: "Unauthorized access to session" });
+      return;
+    }
+    next();
+  },
+  vncProxy
+);
 
 app.use(express.json());
 
@@ -115,9 +147,28 @@ app.use((req: Request, res: Response) => {
 
 const server = http.createServer(app);
 
-// Handle WebSocket upgrade for noVNC streaming
+// Handle WebSocket upgrade for noVNC streaming with authorization check
 server.on("upgrade", (req, socket, head) => {
   if (req.url?.includes("/vnc/")) {
+    const match = req.url.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
+    if (match) {
+      const containerId = match[1];
+      let token: string | undefined;
+      try {
+        const parsedUrl = new URL(req.url, "http://localhost");
+        token = parsedUrl.searchParams.get("token") || undefined;
+      } catch {}
+      if (!token) {
+        token = (req.headers["x-guest-token"] as string) || undefined;
+      }
+      const dockerManager = containerController.getDockerManager();
+      const containerInfo = dockerManager.getContainerInfo(containerId, token);
+      if (!containerInfo) {
+        socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+    }
     vncProxy.upgrade(req, socket as any, head);
   }
 });

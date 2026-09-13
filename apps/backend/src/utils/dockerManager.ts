@@ -49,7 +49,8 @@ export class DockerManager {
 
   async createContainer(
     url: string,
-    userAgent?: string
+    userAgent?: string,
+    guestToken?: string
   ): Promise<CreateContainerResponse> {
     const containerId = uuidv4();
     const isMobile = isMobileUserAgent(userAgent || "");
@@ -108,7 +109,7 @@ export class DockerManager {
 
       // Attempt database audit logging (resilient: failures do not block the active session)
       try {
-        const session = await this.db.createSession(containerId, url, hostPort);
+        const session = await this.db.createSession(containerId, url, hostPort, guestToken);
         await this.db.logAction(
           session.id,
           LogAction.CONTAINER_CREATED,
@@ -134,6 +135,7 @@ export class DockerManager {
         container,
         containerIp,
         vncPort: hostPort,
+        guestToken,
         url,
         createdAt: new Date(),
         timeoutId,
@@ -160,9 +162,13 @@ export class DockerManager {
     }
   }
 
-  async stopContainer(containerId: string): Promise<boolean> {
+  async stopContainer(containerId: string, guestToken?: string): Promise<boolean> {
     const containerInfo = this.activeContainers.get(containerId);
     if (!containerInfo) {
+      return false;
+    }
+
+    if (guestToken && containerInfo.guestToken && containerInfo.guestToken !== guestToken) {
       return false;
     }
 
@@ -195,15 +201,27 @@ export class DockerManager {
     }
   }
 
-  getContainerInfo(containerId: string): ContainerInfo | undefined {
-    return this.activeContainers.get(containerId);
+  getContainerInfo(containerId: string, guestToken?: string): ContainerInfo | undefined {
+    const info = this.activeContainers.get(containerId);
+    if (!info) {
+      return undefined;
+    }
+    if (guestToken && info.guestToken && info.guestToken !== guestToken) {
+      return undefined;
+    }
+    return info;
   }
 
-  listActiveContainers(): ContainerSummary[] {
-    return Array.from(this.activeContainers.entries()).map(([id, info]) => ({
+  listActiveContainers(guestToken?: string): ContainerSummary[] {
+    let entries = Array.from(this.activeContainers.entries());
+    if (guestToken) {
+      entries = entries.filter(([_, info]) => !info.guestToken || info.guestToken === guestToken);
+    }
+    return entries.map(([id, info]) => ({
       containerId: id,
       url: info.url,
       vncPort: info.vncPort,
+      guestToken: info.guestToken,
       createdAt: info.createdAt,
     }));
   }
