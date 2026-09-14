@@ -7,7 +7,7 @@ import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
 import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
-import { LanternMark } from "@/components/LanternMark";
+import { SafeWebMark } from "@/components/SafeWebMark";
 import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function Home() {
               href="#create"
               className="flex items-center gap-[11px] text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
             >
-              <LanternMark />
+              <SafeWebMark />
               SafeWeb
             </a>
 
@@ -101,8 +101,9 @@ export default async function Home() {
                   className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]"
                   style={{ animationDelay: "260ms" }}
                 >
-                  Paste anything you would rather not open yourself. It loads
-                  inside a throwaway container and reaches you as pixels.
+                  Paste a link you&apos;d rather not open on your device. The page
+                  runs on the other side in a throwaway browser; only its pixels
+                  reach you. Ten minutes later, it&apos;s gone.
                 </p>
 
                 <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>
