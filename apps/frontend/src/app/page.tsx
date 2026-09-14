@@ -10,6 +10,8 @@ import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
 import { LanternMark } from "@/components/LanternMark";
 import { ArrowRight } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 export default async function Home() {
   const sessions: Session[] = await getActiveSessions();
   const running = sessions.length;

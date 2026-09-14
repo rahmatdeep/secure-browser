@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import axios from "axios";
+import { getGuestToken } from "@/lib/auth";
 
 const API_BASE =
   process.env.INTERNAL_API_URL ||
@@ -21,14 +22,16 @@ export async function createSession(formData: FormData) {
     const { headers } = await import("next/headers");
     const headersList = await headers();
     const userAgent = headersList.get("user-agent") || "";
+    const guestToken = await getGuestToken();
 
     const response = await axios.post(
       `${API_BASE}/api/containers/create`,
-      { url },
+      { url, guestToken },
       {
         headers: {
           "Content-Type": "application/json",
           "User-Agent": userAgent,
+          "x-guest-token": guestToken,
         },
       }
     );
@@ -53,9 +56,11 @@ export async function createSession(formData: FormData) {
 
 export async function getActiveSessions() {
   try {
+    const guestToken = await getGuestToken();
     const response = await axios.get(`${API_BASE}/api/containers`, {
       headers: {
         "Cache-Control": "no-cache",
+        "x-guest-token": guestToken,
       },
     });
 
@@ -68,11 +73,13 @@ export async function getActiveSessions() {
 
 export async function stopSession(containerId: string) {
   try {
+    const guestToken = await getGuestToken();
     const response = await axios.delete(
       `${API_BASE}/api/containers/${containerId}`,
       {
         headers: {
           "Content-Type": "application/json",
+          "x-guest-token": guestToken,
         },
       }
     );

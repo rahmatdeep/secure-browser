@@ -12,6 +12,7 @@ import {
 import { headers } from "next/headers";
 import axios from "axios";
 import { isMobileUserAgent } from "@secure-browser/shared";
+import { getGuestToken } from "@/lib/auth";
 
 /** Height of vnc_lite.html's status bar: 12px bold Helvetica in a 6px/4px
  *  padding box over a 1px border. */
@@ -23,7 +24,7 @@ interface SessionPageProps {
   }>;
 }
 
-async function getSessionInfo(containerId: string) {
+async function getSessionInfo(containerId: string, guestToken: string) {
   const API_BASE =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -35,6 +36,7 @@ async function getSessionInfo(containerId: string) {
       {
         headers: {
           "Cache-Control": "no-cache",
+          "x-guest-token": guestToken,
         },
       }
     );
@@ -47,7 +49,8 @@ async function getSessionInfo(containerId: string) {
 
 export default async function SessionPage({ params }: SessionPageProps) {
   const { containerId } = await params;
-  const session = await getSessionInfo(containerId);
+  const guestToken = await getGuestToken();
+  const session = await getSessionInfo(containerId, guestToken);
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
   const isMobile = isMobileUserAgent(userAgent);
@@ -168,7 +171,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                        `autoconnect`, `quality` and `compression` are vnc.html
                        options — they were silently ignored here, which is why
                        the desktop rendered 1:1 and letterboxed itself. */
-                    src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&scale=true`}
+                    src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&token=${encodeURIComponent(guestToken)}&scale=true`}
                     className="absolute left-0 w-full border-0"
                     title="VNC Session"
                     /* vnc_lite.html puts a status bar above the canvas, so the
