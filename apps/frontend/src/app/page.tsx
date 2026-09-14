@@ -90,7 +90,7 @@ export default async function Home() {
                   </span>
                 </div>
 
-                <h1 className="text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
+                <h1 className="text-[clamp(44px,7vw,80px)] font-semibold leading-[0.95] tracking-[-0.045em]">
                   <Lines
                     lines={["Borrow a", "browser for", "ten minutes."]}
                     stagger={90}
@@ -101,9 +101,8 @@ export default async function Home() {
                   className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]"
                   style={{ animationDelay: "260ms" }}
                 >
-                  Paste a link you&apos;d rather not open on your device. The page
-                  runs on the other side in a throwaway browser; only its pixels
-                  reach you. Ten minutes later, it&apos;s gone.
+                  Paste anything you would rather not open yourself. It loads
+                  inside a throwaway container and reaches you as pixels.
                 </p>
 
                 <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>

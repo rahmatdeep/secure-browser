@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { SessionCountdown } from "@/components/SessionCountdown";
 import { StopSessionButton } from "@/components/StopSessionButton";
+import { SafeWebMark } from "@/components/SafeWebMark";
 import {
   ArrowLeft,
+  ArrowRight,
   Monitor,
-  AlertCircle,
-  Home,
   Smartphone,
 } from "lucide-react";
 import { headers } from "next/headers";
@@ -66,29 +66,66 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (!session) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink p-5 text-on-ink">
-        <div className="mx-auto flex max-w-md flex-col items-center gap-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-ink-line bg-ink-2">
-            <AlertCircle className="h-8 w-8 text-on-ink-3" strokeWidth={1.5} />
+      <main className="relative isolate flex min-h-svh flex-col overflow-hidden bg-ink text-on-ink">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-[20] bg-cover bg-center"
+          style={{ backgroundImage: "url('/hero-poster.webp')" }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-[10] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.78)_0%,oklch(0.12_0.004_60/0.50)_38%,oklch(0.12_0.004_60/0.20)_100%)]"
+        />
+
+        <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
+          <div className="mx-auto flex max-w-[1024px] items-center">
+            <Link
+              href="/"
+              className="flex items-center gap-[11px] text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
+            >
+              <SafeWebMark />
+              SafeWeb
+            </Link>
           </div>
+        </nav>
 
-          <h1 className="text-[32px] font-semibold leading-[1.04] tracking-[-0.038em]">
-            Session not found.
-          </h1>
-          <p className="text-[16px] leading-[1.55] tracking-[-0.008em] text-on-ink-2">
-            The session you are looking for does not exist or has expired. This
-            could happen if the session was terminated or timed out.
-          </p>
+        <section className="flex flex-1 items-center px-5 py-24 sm:px-[72px]">
+          <div className="mx-auto w-full max-w-[1024px]">
+            <div className="flex max-w-[580px] flex-col gap-[26px] [text-shadow:0_1px_32px_oklch(0.1_0.01_60/0.6)]">
+              <div className="flex items-center gap-3.5">
+                <span className="h-px w-8 bg-on-ink/40" />
+                <span className="font-mono text-[11px] uppercase tracking-[0.09em] text-on-ink-2">
+                  Session unavailable
+                </span>
+              </div>
 
-          <Link
-            href="/"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-on-ink px-5 text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
-          >
-            <Home className="h-4 w-4" strokeWidth={1.5} />
-            Back to home
-          </Link>
-        </div>
-      </div>
+              <h1 className="max-w-[560px] text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
+                This browser isn&apos;t available.
+              </h1>
+              <p className="max-w-[440px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]">
+                It may have reached its ten-minute limit, been closed, or lost
+                its connection. Try again or start a new session.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-5 pt-2.5">
+                <Link
+                  href="/"
+                  className="inline-flex h-12 items-center gap-3 rounded-full bg-on-ink px-[22px] text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
+                >
+                  Start a new session
+                  <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+                </Link>
+                <a
+                  href={`/session/${encodeURIComponent(containerId)}`}
+                  className="text-[14px] tracking-[-0.008em] text-on-ink-2 underline decoration-on-ink/40 underline-offset-4 transition-colors hover:text-on-ink"
+                >
+                  Try this session again
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     );
   }
 
