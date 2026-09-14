@@ -15,6 +15,11 @@
   --on-ink-2: oklch(0.700 0.008 255);
   --on-ink-3: oklch(0.540 0.008 255);
   --accent: oklch(0.55 0.17 255);
+  /* Sampled from the lantern glow in the hero footage (#c3a671), lifted from
+     its native chroma of 0.078 to logo strength. Hue 80 sits almost exactly
+     opposite --accent at 255, so the two are complementary. Deeper or warmer
+     than this falls outside sRGB and the browser flattens it silently. */
+  --lantern: oklch(0.76 0.14 80);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -33,6 +38,7 @@
   --color-on-ink-2: var(--on-ink-2);
   --color-on-ink-3: var(--on-ink-3);
   --color-accent: var(--accent);
+  --color-lantern: var(--lantern);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
