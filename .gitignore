@@ -23,3 +23,10 @@ pnpm-debug.log*
 
 # Database data
 postgres_data/
+
+# Raw video masters. Candidate clips are kept in apps/frontend/public so they
+# can be compared in place, but the exports are hundreds of MB — committing one
+# is effectively permanent, since removing it later means rewriting history.
+# Only the transcoded hero.mp4 and its poster belong in git.
+apps/frontend/public/*.mov
+apps/frontend/public/*-master.*
