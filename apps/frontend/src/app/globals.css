@@ -58,6 +58,34 @@
      depends on. `clip` suppresses the overflow without creating one. */
   html {
     overflow-x: clip;
+
+    /* The platform scrollbar is a 15px light slab, which sits badly against a
+       hero this dark. Thinned, with a transparent track so no line is drawn
+       down the edge, and a thumb at an alpha that stays visible on both the
+       dark hero and the white sections below — the page is both, so the thumb
+       cannot simply match one of them. Styled rather than hidden: it is the
+       only cue for how long the page is, and this one runs to eight screens. */
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.64 0.008 255 / 0.45) transparent;
+  }
+
+  /* For Chrome before 121, which has neither of the standard properties. */
+  html::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: oklch(0.64 0.008 255 / 0.45);
+    border-radius: 999px;
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.64 0.008 255 / 0.7);
   }
 
   body {
