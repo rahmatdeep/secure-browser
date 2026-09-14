@@ -8,6 +8,7 @@ import { Reveal } from "@/components/Reveal";
 import { Aperture } from "@/components/Aperture";
 import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
+import { LanternMark } from "@/components/LanternMark";
 import { ArrowRight } from "lucide-react";
 export default async function Home() {
   const sessions: Session[] = await getActiveSessions();
@@ -31,8 +32,9 @@ export default async function Home() {
           <div className="mx-auto flex max-w-[1024px] items-center justify-between">
             <a
               href="#create"
-              className="text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
+              className="flex items-center gap-[11px] text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
             >
+              <LanternMark />
               SafeWeb
             </a>
 
