@@ -48,10 +48,8 @@
     box-sizing: border-box;
   }
 
-  /* The hero deliberately pushes decoration past the viewport — the aperture
-     is anchored off the right edge and the video is scaled past its frame —
-     so a stray unclipped descendant anywhere would give the whole page a
-     horizontal scrollbar. This is the backstop.
+  /* Oversized visual layers can extend beyond the viewport and give the page
+     a horizontal scrollbar. This is the backstop.
 
      `clip`, not `hidden`: overflow-x: hidden turns the root into a scroll
      container, which breaks the position: sticky that every .pin-stage

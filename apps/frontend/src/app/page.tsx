@@ -5,7 +5,6 @@ import { IsolationSequence } from "@/components/IsolationSequence";
 import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
-import { Aperture } from "@/components/Aperture";
 import { HeroScene } from "@/components/HeroScene";
 import { Scrub } from "@/components/Scrub";
 import { LanternMark } from "@/components/LanternMark";
@@ -72,13 +71,11 @@ export default async function Home() {
           </div>
         </nav>
 
-        {/* ── Hero: the tool, seen from four rings away ─────────────── */}
+        {/* ── Hero: the tool against the full-bleed scene ──────────── */}
         <section
           id="create"
-          className="relative flex flex-1 items-center overflow-hidden"
+          className="relative flex flex-1 items-center"
         >
-          <Aperture />
-
           {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
               border-box sizing, putting both on one element insets the content
               by another 72px and the headline stops hanging on the same left
