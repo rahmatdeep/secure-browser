@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SafeWeb",
   description: "Safe web browsing through containerized isolation",
+  icons: {
+    icon: [{ url: "/safeweb-mark.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({
