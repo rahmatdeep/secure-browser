@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { SessionCountdown } from "@/components/SessionCountdown";
 import { StopSessionButton } from "@/components/StopSessionButton";
+import { SessionViewport } from "@/components/SessionViewport";
 import { SafeWebMark } from "@/components/SafeWebMark";
 import {
   ArrowLeft,
@@ -13,10 +14,6 @@ import { headers } from "next/headers";
 import axios from "axios";
 import { isMobileUserAgent } from "@secure-browser/shared";
 import { getGuestToken } from "@/lib/auth";
-
-/** Height of vnc_lite.html's status bar: 12px bold Helvetica in a 6px/4px
- *  padding box over a 1px border. */
-const NOVNC_BAR = 25;
 
 interface SessionPageProps {
   params: Promise<{
@@ -62,6 +59,14 @@ export default async function SessionPage({ params }: SessionPageProps) {
           return session.url;
         }
       })()
+    : "";
+
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const vncTargetUrl = session
+    ? session.vncUrl.startsWith("http")
+      ? session.vncUrl
+      : `${apiBase}${session.vncUrl}`
     : "";
 
   if (!session) {
@@ -187,63 +192,12 @@ export default async function SessionPage({ params }: SessionPageProps) {
       </div>
 
       <div className="lift p-4 sm:p-[26px_28px_22px]">
-        <div className="relative overflow-hidden rounded-xl border border-ink-line bg-black">
-          <div className="relative w-full bg-[oklch(0.965_0.002_255)]">
-            <div
-              className="w-full overflow-hidden"
-              style={{
-                paddingBottom: isMobile ? "177.87%" : "56.25%",
-              }}
-            >
-              {(() => {
-                const apiBase =
-                  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-                const vncTargetUrl = session.vncUrl.startsWith("http")
-                  ? session.vncUrl
-                  : `${apiBase}${session.vncUrl}`;
-                return (
-                  <iframe
-                    /* vnc_lite.html reads exactly six query variables: host,
-                       port, password, path, view_only and scale. `resize`,
-                       `autoconnect`, `quality` and `compression` are vnc.html
-                       options — they were silently ignored here, which is why
-                       the desktop rendered 1:1 and letterboxed itself. */
-                    src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&token=${encodeURIComponent(guestToken)}&scale=true`}
-                    className="absolute left-0 w-full border-0"
-                    title="VNC Session"
-                    /* vnc_lite.html puts a status bar above the canvas, so the
-                       canvas gets the frame height minus the bar and then
-                       letterboxes itself sideways to keep 16:9. Pulling the
-                       iframe up by the bar's height and growing it to match
-                       clips the bar off the top and hands the canvas the whole
-                       box. NB: noVNC's own connection errors are rendered in
-                       that bar and are now hidden with it. */
-                    style={{
-                      top: `-${NOVNC_BAR}px`,
-                      height: `calc(100% + ${NOVNC_BAR}px)`,
-                      minHeight: isMobile ? "200px" : "300px",
-                    }}
-                  />
-                );
-              })()}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="stream-sweep h-[120px]" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <SessionViewport
+          src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&token=${encodeURIComponent(guestToken)}&scale=true`}
+          isMobile={isMobile}
+        />
       </div>
 
-      <div className="rise flex flex-col justify-between gap-3 px-5 pb-[30px] text-on-ink-3 sm:flex-row sm:px-[30px]">
-        <div className="flex items-center gap-[9px]">
-          <Monitor className="h-3.5 w-3.5" strokeWidth={1.5} />
-          <span className="text-[12.5px] tracking-[-0.004em]">
-            Keystrokes and clicks travel to the container. Nothing travels back
-            but pixels.
-          </span>
-        </div>
-        <span className="font-mono text-[11.5px]">streamed over websockify</span>
-      </div>
     </div>
   );
 }
