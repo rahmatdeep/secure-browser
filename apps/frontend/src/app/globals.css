@@ -183,6 +183,87 @@
   animation: spin 900ms linear infinite;
 }
 
+/* The hero's isolation field arrives from the centre out: containment first,
+   then the remote tab. Only the marker and tab keep moving, slowly enough to
+   read as a live system rather than a loading state. */
+@keyframes aperture-ring-in {
+  from {
+    opacity: 0;
+    scale: 0.74;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes aperture-ring-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.58;
+  }
+}
+
+@keyframes aperture-tab-in {
+  from {
+    opacity: 0;
+    translate: calc(-50% + 52px) -50%;
+    scale: 0.96;
+    clip-path: inset(0 0 0 22% round 16px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    translate: -50% -50%;
+    scale: 1;
+    clip-path: inset(0 round 16px);
+    filter: blur(0);
+  }
+}
+
+@keyframes aperture-tab-float {
+  0%,
+  100% {
+    translate: -50% -50%;
+  }
+  50% {
+    translate: -50% calc(-50% - 5px);
+  }
+}
+
+.aperture-ring {
+  --ring-delay: 0ms;
+  animation:
+    aperture-ring-in 850ms var(--ease) var(--ring-delay) both,
+    aperture-ring-breathe 7s ease-in-out calc(var(--ring-delay) + 950ms) infinite;
+}
+
+.aperture-ring-2 {
+  --ring-delay: 90ms;
+}
+
+.aperture-ring-3 {
+  --ring-delay: 180ms;
+}
+
+.aperture-ring-4 {
+  --ring-delay: 270ms;
+}
+
+.aperture-tab {
+  animation:
+    aperture-tab-in 780ms var(--ease) 360ms both,
+    aperture-tab-float 7s ease-in-out 1300ms infinite;
+}
+
+.aperture--paused .aperture-ring,
+.aperture--paused .aperture-tab {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -191,6 +272,16 @@
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+
+  .aperture-ring,
+  .aperture-tab {
+    animation: none !important;
+    opacity: 1;
+    translate: -50% -50%;
+    scale: 1;
+    clip-path: none;
+    filter: none;
   }
 }
 
