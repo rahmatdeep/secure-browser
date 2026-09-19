@@ -5,9 +5,8 @@ import { IsolationSequence } from "@/components/IsolationSequence";
 import { TimerSequence } from "@/components/TimerSequence";
 import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
-import { HeroScene } from "@/components/HeroScene";
-import { Scrub } from "@/components/Scrub";
 import { SafeWebMark } from "@/components/SafeWebMark";
+import { Aperture } from "@/components/Aperture";
 import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -17,18 +16,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-bg text-fg">
-      {/* ── Hero: nav and hero share one field, so the colour runs to the
-             top of the page instead of starting under a white strip ────── */}
-      <Scrub className="relative isolate flex min-h-svh flex-col overflow-hidden text-on-ink">
-        <HeroScene />
-        {/* Scrim, weighted to the left where the type sits. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[20] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.72)_0%,oklch(0.12_0.004_60/0.44)_30%,oklch(0.12_0.004_60/0.10)_60%,oklch(0.12_0.004_60/0.16)_100%)]"
-        />
-
-        {/* No rule under the nav: a line ruled across footage was the one piece
-            of chrome that still read as a template. The items float instead. */}
+      <div className="relative flex min-h-svh flex-col overflow-hidden text-fg">
         <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
           <div className="mx-auto flex max-w-[1024px] items-center justify-between">
             <a
@@ -42,13 +30,13 @@ export default async function Home() {
             <div className="hidden items-center gap-8 sm:flex">
               <a
                 href="#isolation"
-                className="font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2 transition-colors duration-200 hover:text-on-ink hover:no-underline"
+                className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3 transition-colors duration-200 hover:text-fg hover:no-underline"
               >
                 How it works
               </a>
               <a
                 href="#sessions"
-                className="font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2 transition-colors duration-200 hover:text-on-ink hover:no-underline"
+                className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3 transition-colors duration-200 hover:text-fg hover:no-underline"
               >
                 Sessions
               </a>
@@ -58,12 +46,12 @@ export default async function Home() {
             <a
               href="#"
               aria-label="SafeWeb on X"
-              className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-on-ink/25 bg-on-ink/[0.06] backdrop-blur-md transition-colors duration-200 hover:border-on-ink/45 hover:bg-on-ink/[0.12] hover:no-underline"
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-line bg-bg transition-colors duration-200 hover:border-fg-3 hover:bg-surface hover:no-underline"
             >
               <svg
                 viewBox="0 0 24 24"
                 aria-hidden="true"
-                className="h-[13px] w-[13px] fill-on-ink"
+                className="h-[13px] w-[13px] fill-fg"
               >
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
@@ -71,21 +59,22 @@ export default async function Home() {
           </div>
         </nav>
 
-        {/* ── Hero: the tool against the full-bleed scene ──────────── */}
         <section
           id="create"
-          className="relative flex flex-1 items-center"
+          className="relative flex flex-1 items-center overflow-hidden"
         >
+          <Aperture />
+
           {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
               border-box sizing, putting both on one element insets the content
               by another 72px and the headline stops hanging on the same left
               line as the logo and the section rules. */}
           <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
             <div className="mx-auto flex w-full max-w-[1024px] flex-col">
-              <div className="flex max-w-[560px] flex-col gap-[26px] [text-shadow:0_1px_32px_oklch(0.1_0.01_60/0.6)]">
+              <div className="flex max-w-[560px] flex-col gap-[26px]">
                 <div className="rise flex items-center gap-3.5">
-                  <span className="h-px w-8 bg-on-ink/40" />
-                  <span className="font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2">
+                  <span className="h-px w-8 bg-line" />
+                  <span className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3">
                     Disposable browser sessions
                   </span>
                 </div>
@@ -98,7 +87,7 @@ export default async function Home() {
                 </h1>
 
                 <p
-                  className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]"
+                  className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-fg-2 sm:text-[18px]"
                   style={{ animationDelay: "260ms" }}
                 >
                   Paste anything you would rather not open yourself. It loads
@@ -115,7 +104,7 @@ export default async function Home() {
                 {running > 0 && (
                   <a
                     href="#sessions"
-                    className="rise flex items-center gap-2.5 font-mono text-[11px] tracking-[0.09em] uppercase text-on-ink-2 transition-colors duration-200 hover:text-on-ink hover:no-underline"
+                    className="rise flex items-center gap-2.5 font-mono text-[11px] tracking-[0.09em] uppercase text-fg-2 transition-colors duration-200 hover:text-fg hover:no-underline"
                     style={{ animationDelay: "420ms" }}
                   >
                     <span className="live-dot h-[6px] w-[6px] rounded-full bg-[oklch(0.74_0.13_255)]" />
@@ -128,7 +117,7 @@ export default async function Home() {
             </div>
           </div>
         </section>
-      </Scrub>
+      </div>
 
       {/* ── Pinned: how isolation actually works ───────────────────── */}
       <div id="isolation">
