@@ -71,17 +71,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (!session) {
     return (
-      <main className="relative isolate flex min-h-svh flex-col overflow-hidden bg-ink text-on-ink">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[20] bg-cover bg-center"
-          style={{ backgroundImage: "url('/hero-poster.webp')" }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-[10] bg-[linear-gradient(100deg,oklch(0.12_0.004_60/0.78)_0%,oklch(0.12_0.004_60/0.50)_38%,oklch(0.12_0.004_60/0.20)_100%)]"
-        />
-
+      <main className="flex min-h-svh flex-col bg-ink text-on-ink">
         <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
           <div className="mx-auto flex max-w-[1024px] items-center">
             <Link
@@ -96,9 +86,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
         <section className="flex flex-1 items-center px-5 py-24 sm:px-[72px]">
           <div className="mx-auto w-full max-w-[1024px]">
-            <div className="flex max-w-[580px] flex-col gap-[26px] [text-shadow:0_1px_32px_oklch(0.1_0.01_60/0.6)]">
+            <div className="flex max-w-[580px] flex-col gap-[26px]">
               <div className="flex items-center gap-3.5">
-                <span className="h-px w-8 bg-on-ink/40" />
+                <span className="h-px w-8 bg-ink-line" />
                 <span className="font-mono text-[11px] uppercase tracking-[0.09em] text-on-ink-2">
                   Session unavailable
                 </span>
