@@ -396,3 +396,87 @@
   content: counter(mm);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Landing → session handoff ───────────────────────────────────────────
+   The landing page is white and the session page is ink. Without this the
+   two swap luminance in a single frame, on top of a multi-second Docker
+   wait that previously showed only a spinner in the submit button. The ink
+   panel wipes up over the landing page and the session page then renders
+   underneath it already dark, so there is no flash to hide.              */
+
+@keyframes handoff-wipe {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Indeterminate: this wait has no measurable percentage to report. */
+@keyframes handoff-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.handoff {
+  animation: handoff-wipe 620ms var(--ease) both;
+}
+
+/* Delay lives inside the shorthand. An `animation-delay` longhand written
+   after an `animation` shorthand is merged back by Lightning CSS into a form
+   that emits empty longhands (animation-name: ;), which kills the whole rule
+   — the same optimizer hazard documented for the scroll timeline above.
+   Per-element offsets are set inline, which is unaffected. */
+.handoff-in {
+  animation: rise 700ms var(--ease) 340ms both;
+}
+
+.handoff-bar {
+  animation: handoff-bar 1500ms cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* Stages light in sequence. This is CSS rather than React state on purpose:
+   a re-render inside the <form> while its action is pending makes
+   useFormStatus report pending: false, which unmounts the whole overlay
+   mid-wait. Delay stays inside the shorthand — see .handoff-in above. */
+@keyframes handoff-stage {
+  from {
+    opacity: 0.28;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.handoff-stage {
+  opacity: 0.28;
+  animation: handoff-stage 420ms var(--ease)
+    calc(var(--i) * 1100ms + 620ms) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The overlay still has to appear — it is the only thing standing between
+     the user and an unexplained multi-second pause. Only the motion goes. */
+  .handoff,
+  .handoff-in {
+    animation: none !important;
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .handoff-bar {
+    animation: none !important;
+    width: 100%;
+    opacity: 0.45;
+  }
+  .handoff-stage {
+    animation: none !important;
+    opacity: 1;
+  }
+}
