@@ -7,6 +7,7 @@ import { Lines } from "@/components/Lines";
 import { Reveal } from "@/components/Reveal";
 import { SafeWebMark } from "@/components/SafeWebMark";
 import { Aperture } from "@/components/Aperture";
+import { SiteFooter } from "@/components/SiteFooter";
 import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -179,16 +180,7 @@ export default async function Home() {
         </Reveal>
       </div>
 
-      <footer className="mt-14 px-5 sm:px-[72px]">
-        <div className="mx-auto flex max-w-[1024px] flex-col justify-between gap-4 border-t border-line pb-11 pt-[30px] sm:flex-row">
-          <span className="text-[13px] tracking-[-0.004em] text-fg-3">
-            SafeWeb - isolated, disposable browsing.
-          </span>
-          <span className="font-mono text-[12px] text-fg-3">
-            vnc-browser-chrome:latest
-          </span>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
