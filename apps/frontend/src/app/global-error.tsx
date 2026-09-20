@@ -72,6 +72,18 @@ export default function GlobalError({
           >
             Reload
           </button>
+          <p
+            style={{
+              margin: "26px 0 0",
+              fontSize: "10.5px",
+              letterSpacing: "0.09em",
+              textTransform: "uppercase",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              color: "oklch(0.62 0.15 65)",
+            }}
+          >
+            Beta
+          </p>
           {error.digest && (
             <p
               style={{
