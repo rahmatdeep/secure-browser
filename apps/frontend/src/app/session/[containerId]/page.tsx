@@ -3,7 +3,11 @@ import type { CSSProperties } from "react";
 import { SessionCountdown } from "@/components/SessionCountdown";
 import { StopSessionButton } from "@/components/StopSessionButton";
 import { SessionViewport } from "@/components/SessionViewport";
-import { SafeWebMark } from "@/components/SafeWebMark";
+import {
+  StatusScreen,
+  statusActionClass,
+  statusLinkClass,
+} from "@/components/StatusScreen";
 import {
   ArrowLeft,
   ArrowRight,
@@ -71,56 +75,22 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   if (!session) {
     return (
-      <main className="flex min-h-svh flex-col bg-ink text-on-ink">
-        <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
-          <div className="mx-auto flex max-w-[1024px] items-center">
-            <Link
-              href="/"
-              className="flex items-center gap-[11px] text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
-            >
-              <SafeWebMark />
-              SafeWeb
-            </Link>
-          </div>
-        </nav>
-
-        <section className="flex flex-1 items-center px-5 py-24 sm:px-[72px]">
-          <div className="mx-auto w-full max-w-[1024px]">
-            <div className="flex max-w-[580px] flex-col gap-[26px]">
-              <div className="flex items-center gap-3.5">
-                <span className="h-px w-8 bg-ink-line" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.09em] text-on-ink-2">
-                  Session unavailable
-                </span>
-              </div>
-
-              <h1 className="max-w-[560px] text-[clamp(44px,7vw,72px)] font-semibold leading-[0.95] tracking-[-0.045em]">
-                This browser isn&apos;t available.
-              </h1>
-              <p className="max-w-[440px] text-[17px] leading-[1.55] tracking-[-0.009em] text-on-ink-2 sm:text-[18px]">
-                It may have reached its ten-minute limit, been closed, or lost
-                its connection. Try again or start a new session.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-5 pt-2.5">
-                <Link
-                  href="/"
-                  className="inline-flex h-12 items-center gap-3 rounded-full bg-on-ink px-[22px] text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
-                >
-                  Start a new session
-                  <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-                </Link>
-                <a
-                  href={`/session/${encodeURIComponent(containerId)}`}
-                  className="text-[14px] tracking-[-0.008em] text-on-ink-2 underline decoration-on-ink/40 underline-offset-4 transition-colors hover:text-on-ink"
-                >
-                  Try this session again
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <StatusScreen
+        kicker="Session unavailable"
+        title="This browser isn't available."
+        body="It may have reached its ten-minute limit, been closed, or lost its connection. Try again or start a new session."
+      >
+        <Link href="/" className={statusActionClass}>
+          Start a new session
+          <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+        </Link>
+        <a
+          href={`/session/${encodeURIComponent(containerId)}`}
+          className={statusLinkClass}
+        >
+          Try this session again
+        </a>
+      </StatusScreen>
     );
   }
 
