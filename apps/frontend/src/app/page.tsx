@@ -1,132 +1,186 @@
 import { CreateSessionForm } from "@/components/CreateSessionForm";
-import { ActiveSessions } from "@/components/ActiveSession";
-import { Shield, Zap, Lock, Globe } from "lucide-react";
+import { ActiveSessions, type Session } from "@/components/ActiveSession";
+import { getActiveSessions } from "@/actions/sessionActions";
+import { IsolationSequence } from "@/components/IsolationSequence";
+import { TimerSequence } from "@/components/TimerSequence";
+import { Lines } from "@/components/Lines";
+import { Reveal } from "@/components/Reveal";
+import { SafeWebMark } from "@/components/SafeWebMark";
+import { Aperture } from "@/components/Aperture";
+import { SiteFooter } from "@/components/SiteFooter";
+import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+export default async function Home() {
+  const sessions: Session[] = await getActiveSessions();
+  const running = sessions.length;
 
-export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 sm:-top-40 sm:-right-40 w-40 h-40 sm:w-80 sm:h-80 bg-blue-500/10 rounded-full animate-pulse"></div>
-        <div
-          className="absolute -bottom-20 -left-20 sm:-bottom-40 sm:-left-40 w-40 h-40 sm:w-80 sm:h-80 bg-purple-500/10 rounded-full animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-96 sm:h-96 bg-indigo-500/5 rounded-full animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
+    <main className="min-h-screen bg-bg text-fg">
+      <div className="relative flex min-h-svh flex-col overflow-hidden text-fg">
+        <nav className="px-5 pt-5 sm:px-[72px] sm:pt-7">
+          <div className="mx-auto flex max-w-[1024px] items-center justify-between">
+            <a
+              href="#create"
+              className="flex items-center gap-[11px] text-[15px] font-semibold leading-none tracking-[-0.018em] hover:no-underline"
+            >
+              <SafeWebMark />
+              SafeWeb
+            </a>
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="relative inline-block mb-4 sm:mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
-              <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-            </div>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6">
-            <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
-              Secure Browser
-            </span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-4">
-            Browse the web safely in isolated containers with enterprise-grade
-            security
-          </p>
-
-          {/* Feature highlights */}
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sm:mb-8 px-4">
-            {[
-              {
-                icon: Lock,
-                text: "Isolated Environment",
-                color: "text-blue-400",
-              },
-              { icon: Zap, text: "Lightning Fast", color: "text-yellow-400" },
-              { icon: Globe, text: "Any Website", color: "text-green-400" },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-1.5 sm:gap-2 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300"
-                style={{
-                  animationDelay: `${index * 200}ms`,
-                  animation: "fadeInUp 0.6s ease-out forwards",
-                }}
+            <div className="hidden items-center gap-8 sm:flex">
+              <a
+                href="#isolation"
+                className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3 transition-colors duration-200 hover:text-fg hover:no-underline"
               >
-                <feature.icon
-                  className={`w-3 h-3 sm:w-4 sm:h-4 ${feature.color}`}
-                />
-                <span className="text-xs sm:text-sm text-gray-300">
-                  {feature.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+                How it works
+              </a>
+              <a
+                href="#sessions"
+                className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3 transition-colors duration-200 hover:text-fg hover:no-underline"
+              >
+                Sessions
+              </a>
+            </div>
 
-        <div className="space-y-6 sm:space-y-8">
-          {/* Create new session */}
-          <div
-            className="relative group"
-            style={{
-              animation: "fadeInUp 0.8s ease-out forwards",
-              animationDelay: "0.2s",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-indigo-500/20 rounded-xl sm:rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-2xl hover:border-gray-600/50 transition-all duration-500">
-              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            {/* TODO: point at the real account once it exists. */}
+            <a
+              href="#"
+              aria-label="SafeWeb on X"
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-line bg-bg transition-colors duration-200 hover:border-fg-3 hover:bg-surface hover:no-underline"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-[13px] w-[13px] fill-fg"
+              >
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
+          </div>
+        </nav>
+
+        <section
+          id="create"
+          className="relative flex flex-1 items-center overflow-hidden"
+        >
+          <Aperture />
+
+          {/* Padding sits OUTSIDE the 1024 track, as it does in the nav — with
+              border-box sizing, putting both on one element insets the content
+              by another 72px and the headline stops hanging on the same left
+              line as the logo and the section rules. */}
+          <div className="relative z-10 w-full px-5 pt-24 pb-28 sm:px-[72px] sm:pt-[132px] sm:pb-[148px] xl:py-0">
+            <div className="mx-auto flex w-full max-w-[1024px] flex-col">
+              <div className="flex max-w-[560px] flex-col gap-[26px]">
+                <div className="rise flex items-center gap-3.5">
+                  <span className="h-px w-8 bg-line" />
+                  <span className="font-mono text-[11px] tracking-[0.09em] uppercase text-fg-3">
+                    Disposable browser sessions
+                  </span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Create New Session
-                </h2>
+
+                <h1 className="text-[clamp(44px,7vw,80px)] font-semibold leading-[0.95] tracking-[-0.045em]">
+                  <Lines
+                    lines={["Borrow a", "browser for", "ten minutes."]}
+                    stagger={90}
+                  />
+                </h1>
+
+                <p
+                  className="rise max-w-[430px] text-[17px] leading-[1.55] tracking-[-0.009em] text-fg-2 sm:text-[18px]"
+                  style={{ animationDelay: "260ms" }}
+                >
+                  Paste anything you would rather not open yourself. It loads
+                  inside a throwaway container and reaches you as pixels.
+                </p>
+
+                <div className="rise mt-2.5" style={{ animationDelay: "340ms" }}>
+                  <CreateSessionForm />
+                </div>
+
+                {/* Only for the person it matters to. The list lives seven
+                    screens down, which is right for a first visit and useless
+                    for someone coming back to a session they left open. */}
+                {running > 0 && (
+                  <a
+                    href="#sessions"
+                    className="rise flex items-center gap-2.5 font-mono text-[11px] tracking-[0.09em] uppercase text-fg-2 transition-colors duration-200 hover:text-fg hover:no-underline"
+                    style={{ animationDelay: "420ms" }}
+                  >
+                    <span className="live-dot h-[6px] w-[6px] rounded-full bg-[oklch(0.74_0.13_255)]" />
+                    {running} session{running === 1 ? "" : "s"} running
+                    <ArrowRight className="h-[13px] w-[13px]" strokeWidth={1.5} />
+                  </a>
+                )}
+
               </div>
-              <CreateSessionForm />
             </div>
           </div>
-
-          {/* Active sessions */}
-          <div
-            className="relative group"
-            style={{
-              animation: "fadeInUp 0.8s ease-out forwards",
-              animationDelay: "0.4s",
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-blue-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-2xl hover:border-gray-600/50 transition-all duration-500">
-              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Active Sessions
-                </h2>
-              </div>
-              <ActiveSessions />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-gray-800/50">
-          <p className="text-gray-500 text-xs sm:text-sm flex items-center justify-center gap-2 px-4">
-            <Shield className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="text-center">
-              Your browsing sessions are protected by enterprise-grade isolation
-            </span>
-          </p>
-        </div>
+        </section>
       </div>
+
+      {/* ── Pinned: how isolation actually works ───────────────────── */}
+      <div id="isolation">
+        <IsolationSequence />
+      </div>
+
+      {/* ── Scrubbed: the ten minutes, spent ───────────────────────── */}
+      <div id="lifetime">
+        <TimerSequence />
+      </div>
+
+      {/* ── Sessions ───────────────────────────────────────────────── */}
+      <section id="sessions" className="px-5 pt-24 sm:px-[72px]">
+        <div className="mx-auto flex max-w-[1024px] flex-col gap-[22px]">
+          <Reveal className="flex flex-col gap-3.5">
+            <span className="font-mono text-[12px] uppercase tracking-[0.06em] text-fg-3">
+              Sessions
+            </span>
+            {/* The heading used to promise a list and then be contradicted by
+                an empty box directly under it. */}
+            <h2 className="max-w-[620px] text-[44px] font-semibold leading-[1.04] tracking-[-0.038em]">
+              {running > 0
+                ? "Everything currently running."
+                : "Nothing is running."}
+            </h2>
+          </Reveal>
+          {/* Nothing follows the heading when nothing is running. "Nothing is
+              running." is the whole statement; the note that used to sit under
+              it explained something no one had asked. */}
+          {running > 0 && (
+            <Reveal delay={60}>
+              <ActiveSessions sessions={sessions} />
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      {/* ── Closing ────────────────────────────────────────────────── */}
+      <div className="mt-32 px-5 sm:px-[72px]">
+        <Reveal className="mx-auto flex max-w-[1024px] flex-col items-center gap-[26px] rounded-[20px] bg-ink px-6 py-20 text-center sm:px-[72px] sm:py-[92px]">
+          <h2 className="max-w-[660px] text-[42px] font-semibold leading-[1.04] tracking-[-0.038em] text-on-ink sm:text-[50px]">
+            Paste a link you don&apos;t trust.
+          </h2>
+          <p className="max-w-[460px] text-[17px] leading-[1.55] tracking-[-0.008em] text-on-ink-2">
+            That is the whole workflow. Close the tab whenever you like; the
+            container stops either way.
+          </p>
+          {/* Deliberately a link to the field, not a second copy of it. Two
+              uncontrolled inputs share no state, so a URL typed in the hero
+              leaves this one empty and the page appears to have lost it. The
+              anchor is instant and lands on a hero that is one viewport tall,
+              with the field already in view. */}
+          <a
+            href="#create"
+            className="mt-2 flex h-12 items-center justify-center rounded-full bg-on-ink px-[26px] text-[15px] font-medium tracking-[-0.011em] text-ink hover:no-underline"
+          >
+            Open a session
+          </a>
+        </Reveal>
+      </div>
+
+      <SiteFooter />
     </main>
   );
 }

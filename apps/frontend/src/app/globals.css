@@ -1,26 +1,532 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(0.993 0.002 255);
+  --surface: oklch(0.974 0.003 255);
+  --fg: oklch(0.185 0.008 255);
+  --fg-2: oklch(0.462 0.010 255);
+  --fg-3: oklch(0.640 0.008 255);
+  --line: oklch(0.906 0.004 255);
+  --ink: oklch(0.115 0.006 255);
+  --ink-2: oklch(0.165 0.006 255);
+  --ink-3: oklch(0.215 0.006 255);
+  --ink-line: oklch(0.275 0.008 255);
+  --on-ink: oklch(0.965 0.002 255);
+  --on-ink-2: oklch(0.700 0.008 255);
+  --on-ink-3: oklch(0.540 0.008 255);
+  --accent: oklch(0.55 0.17 255);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-line: var(--ink-line);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-2: var(--on-ink-2);
+  --color-on-ink-3: var(--on-ink-3);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Oversized visual layers can extend beyond the viewport and give the page
+     a horizontal scrollbar. This is the backstop.
+
+     `clip`, not `hidden`: overflow-x: hidden turns the root into a scroll
+     container, which breaks the position: sticky that every .pin-stage
+     depends on. `clip` suppresses the overflow without creating one. */
+  html {
+    overflow-x: clip;
+
+    /* Scrollbar hidden by choice. The page is a full-bleed video hero with a
+       dark ground, and the platform scrollbar was the loudest thing on it.
+       Scrolling itself is untouched — wheel, trackpad, keys, drag and
+       scrollbar-less overscroll all behave as before; only the indicator is
+       gone, so the page's length is no longer visible in advance. */
+    scrollbar-width: none;
+  }
+
+  /* For Chrome before 121 and Safari, which do not honour scrollbar-width. */
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  button,
+  input {
+    font: inherit;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: scale(0.955) translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(520%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rise {
+  animation: rise 900ms var(--ease) both;
+}
+
+.lift {
+  animation: lift 1200ms var(--ease) both;
+}
+
+.reveal {
+  opacity: 0;
+}
+
+.reveal.is-visible {
+  animation: rise 900ms var(--ease) both;
+}
+
+.live-dot {
+  animation: breathe 2600ms ease-in-out infinite;
+}
+
+.stream-sweep {
+  background: linear-gradient(
+    oklch(0.30 0.01 255 / 0),
+    oklch(0.30 0.01 255 / 0.05),
+    oklch(0.30 0.01 255 / 0)
+  );
+  animation: sweep 8s linear infinite;
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+/* The hero's isolation field arrives from the centre out: containment first,
+   then the remote tab. Only the marker and tab keep moving, slowly enough to
+   read as a live system rather than a loading state. */
+@keyframes aperture-ring-in {
+  from {
+    opacity: 0;
+    scale: 0.74;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes aperture-ring-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.58;
+  }
+}
+
+@keyframes aperture-tab-in {
+  from {
+    opacity: 0;
+    translate: calc(-50% + 52px) -50%;
+    scale: 0.96;
+    clip-path: inset(0 0 0 22% round 16px);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    translate: -50% -50%;
+    scale: 1;
+    clip-path: inset(0 round 16px);
+    filter: blur(0);
+  }
+}
+
+@keyframes aperture-tab-float {
+  0%,
+  100% {
+    translate: -50% -50%;
+  }
+  50% {
+    translate: -50% calc(-50% - 5px);
+  }
+}
+
+.aperture-ring {
+  --ring-delay: 0ms;
+  animation:
+    aperture-ring-in 850ms var(--ease) var(--ring-delay) both,
+    aperture-ring-breathe 7s ease-in-out calc(var(--ring-delay) + 950ms) infinite;
+}
+
+.aperture-ring-2 {
+  --ring-delay: 90ms;
+}
+
+.aperture-ring-3 {
+  --ring-delay: 180ms;
+}
+
+.aperture-ring-4 {
+  --ring-delay: 270ms;
+}
+
+.aperture-tab {
+  animation:
+    aperture-tab-in 780ms var(--ease) 360ms both,
+    aperture-tab-float 7s ease-in-out 1300ms infinite;
+}
+
+.aperture--paused .aperture-ring,
+.aperture--paused .aperture-tab {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .aperture-ring,
+  .aperture-tab {
+    animation: none !important;
+    opacity: 1;
+    translate: -50% -50%;
+    scale: 1;
+    clip-path: none;
+    filter: none;
+  }
+}
+
+/* ── Scroll-driven motion ────────────────────────────────────────────────
+   One registered property, --p (0→1), drives every scrubbed effect.
+   Driven natively by animation-timeline where supported, and by a rAF
+   fallback in Firefox (see Scrub.tsx). p=0 is always a sane resting state,
+   so a failure to drive it degrades to a static, correct-looking page.     */
+
+@property --p {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
+@property --mm {
+  syntax: "<integer>";
+  initial-value: 10;
+  inherits: true;
+}
+
+@keyframes scrub-p {
+  from {
+    --p: 0;
+  }
+  to {
+    --p: 1;
+  }
+}
+
+@keyframes scrub-mm {
+  from {
+    --mm: 10;
+  }
+  to {
+    --mm: 0;
+  }
+}
+
+/* The native scroll timeline is wired up imperatively in Scrub.tsx, NOT here.
+   Lightning CSS folds `animation-timeline: view()` into the `animation`
+   shorthand (`animation: linear both scrub-p view()`), a form Chrome does not
+   parse — the declaration is dropped and animation-name resolves to none.
+   Setting the longhands on the element sidesteps the optimizer entirely. */
+
+/* Sticky stage for the pinned sequences */
+.pin-stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Beat captions cross-fade on --p; each owns a slice of the scroll range. */
+.beat {
+  /* abs() is not broadly supported yet; max(a-b, b-a) is the portable form. */
+  opacity: calc(
+    1 - min(1, max(var(--p) - var(--at), var(--at) - var(--p)) * var(--sharp, 5))
+  );
+  transition: none;
+}
+
+/* Line-by-line text reveal, staggered by --i */
+.line {
+  display: block;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(6px);
+}
+
+.line.is-in {
+  animation: rise 800ms var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disabling the animation would strand --p at 0, which is the *unresolved*
+     state: a half-scaled frame with invisible content. Pin it at 1 instead so
+     every scrubbed section renders its finished state, and let the pinned
+     stages flow normally with all beats stacked and legible. */
+  .scrub-view,
+  .scrub-pin,
+  .scrub-mm {
+    animation: none !important;
+    --p: 1;
+    --mm: 0;
+  }
+  .pin-stage {
+    position: static;
+    height: auto;
+    padding-block: 72px;
+  }
+  .beats {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .beats .beat {
+    position: static;
+    opacity: 1;
+  }
+  .line {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none !important;
+  }
+}
+
+/* Scrubbed minute readout. The integer property steps 10→0 and CSS counters
+   render it, so the number is driven by the same --p as everything else. */
+.mm::before {
+  counter-reset: mm var(--mm);
+  content: counter(mm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Landing → session handoff ───────────────────────────────────────────
+   The landing page is white and the session page is ink. Without this the
+   two swap luminance in a single frame, on top of a multi-second Docker
+   wait that previously showed only a spinner in the submit button. The ink
+   panel wipes up over the landing page and the session page then renders
+   underneath it already dark, so there is no flash to hide.              */
+
+@keyframes handoff-wipe {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Indeterminate: this wait has no measurable percentage to report. */
+@keyframes handoff-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.handoff {
+  animation: handoff-wipe 620ms var(--ease) both;
+}
+
+/* Delay lives inside the shorthand. An `animation-delay` longhand written
+   after an `animation` shorthand is merged back by Lightning CSS into a form
+   that emits empty longhands (animation-name: ;), which kills the whole rule
+   — the same optimizer hazard documented for the scroll timeline above.
+   Per-element offsets are set inline, which is unaffected. */
+.handoff-in {
+  animation: rise 700ms var(--ease) 340ms both;
+}
+
+.handoff-bar {
+  animation: handoff-bar 1500ms cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* Stages light in sequence. This is CSS rather than React state on purpose:
+   a re-render inside the <form> while its action is pending makes
+   useFormStatus report pending: false, which unmounts the whole overlay
+   mid-wait. Delay stays inside the shorthand — see .handoff-in above. */
+@keyframes handoff-stage {
+  from {
+    opacity: 0.28;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.handoff-stage {
+  opacity: 0.28;
+  animation: handoff-stage 420ms var(--ease)
+    calc(var(--i) * 1100ms + 620ms) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The overlay still has to appear — it is the only thing standing between
+     the user and an unexplained multi-second pause. Only the motion goes. */
+  .handoff,
+  .handoff-in {
+    animation: none !important;
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .handoff-bar {
+    animation: none !important;
+    width: 100%;
+    opacity: 0.45;
+  }
+  .handoff-stage {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+/* ── Written pages (privacy, terms, abuse) ───────────────────────────── */
+
+.legal p {
+  font-size: 15.5px;
+  line-height: 1.62;
+  letter-spacing: -0.007em;
+  color: var(--fg-2);
+}
+
+.legal p + p {
+  margin-top: 13px;
+}
+
+.legal ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-left: 19px;
+  list-style: disc;
+}
+
+.legal li {
+  font-size: 15.5px;
+  line-height: 1.55;
+  letter-spacing: -0.007em;
+  color: var(--fg-2);
+}
+
+.legal li::marker {
+  color: var(--fg-3);
+}
+
+.legal a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 200ms var(--ease);
+}
+
+.legal a:hover {
+  text-decoration-color: var(--fg-3);
+}
+
+.legal code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
 }
