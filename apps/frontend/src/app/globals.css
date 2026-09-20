@@ -480,3 +480,53 @@
     opacity: 1;
   }
 }
+
+/* ── Written pages (privacy, terms, abuse) ───────────────────────────── */
+
+.legal p {
+  font-size: 15.5px;
+  line-height: 1.62;
+  letter-spacing: -0.007em;
+  color: var(--fg-2);
+}
+
+.legal p + p {
+  margin-top: 13px;
+}
+
+.legal ul {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-left: 19px;
+  list-style: disc;
+}
+
+.legal li {
+  font-size: 15.5px;
+  line-height: 1.55;
+  letter-spacing: -0.007em;
+  color: var(--fg-2);
+}
+
+.legal li::marker {
+  color: var(--fg-3);
+}
+
+.legal a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 200ms var(--ease);
+}
+
+.legal a:hover {
+  text-decoration-color: var(--fg-3);
+}
+
+.legal code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+}

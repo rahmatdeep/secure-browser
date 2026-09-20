@@ -35,6 +35,36 @@ Code references are to the state at commit 5084088.
 - [ ] **Error states.** `createSession` rethrows on failure — check what a user actually sees when container creation fails, since the handoff overlay covers the screen while it happens.
 - [ ] Check the rebuilt isolation and lifetime sections at phone width.
 
+## Decisions to make
+
+The written pages at `/privacy`, `/terms` and `/abuse` are drafted from what
+the code actually does. Everything that could not be derived from the code is
+left in the page as a visible `Pending` marker carrying the id below, so a
+half-written policy cannot quietly ship looking finished.
+
+To close one: decide it, replace every `<Pending id="Dn">…</Pending>` with the
+answer, and tick it here. When a page has no markers left, drop the
+`robots: { index: false }` from its `metadata` — that is what keeps unfinished
+legal text out of search results.
+
+| id | decision | appears on | blocked by |
+| --- | --- | --- | --- |
+| D1 | Who operates the service — person or company, and the country it operates from. This is the data controller, so it needs settling between you and the repo owner before anything is published. | privacy, abuse | — |
+| D2 | Contact address for privacy and general legal questions. | privacy, terms | — |
+| D3 | Monitored contact address for abuse and takedown reports. Providers will use this instead of suspending you, so it has to be real and watched. | abuse | — |
+| D4 | How long session records and activity logs are kept. Note the target URL is stored twice — `ContainerSession.targetUrl` and again in the `ContainerLog` details string — so any retention rule has to clear both. | privacy | the retention work in P1 |
+| D5 | Which access, correction and deletion rights are offered, and how a request is authenticated. There is no account: the only identifier is a session cookie the visitor has probably already discarded, so a right to deletion may be one you cannot operationally deliver. Retaining less makes this question smaller. | privacy | D4 |
+| D6 | Governing law and where disputes are heard. | terms | D1 |
+| D7 | Which limits to state publicly — session length, sessions per visitor, any daily cap. Ten minutes is real today; the per-visitor cap is not implemented yet. | terms | the concurrency cap in P0 |
+| D8 | Effective date for the first published version of each document. Set this last, when the rest are settled. | privacy, terms | D1–D7 |
+| D9 | Whether the hosting provider keeps access logs containing IP addresses, and for how long. Depends on where this is deployed; the app itself only holds IPs in memory for rate limiting. | privacy | choice of host |
+| D10 | What response time to promise abuse reporters, and whether they get a reply confirming the outcome. Promise only what you will actually do. | abuse | D3 |
+
+Two of these are worth deciding early because other things wait on them: D1,
+because it decides whose name is on the documents, and D4, because the privacy
+page cannot be finished until retention is settled and every other date and
+right depends on it.
+
 ## P3 — operations
 
 - [ ] Reap orphaned containers on backend restart; the ten-minute timer lives in memory (`dockerManager.ts:130`) and does not survive a process restart.
