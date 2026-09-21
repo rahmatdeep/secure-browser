@@ -15,7 +15,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - secure-browser-net
+      - secure-browser-db
 
   backend:
     build:
@@ -30,9 +30,14 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-secure_browser}}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      DOCKER_NETWORK: "secure-browser-net"
+      SESSION_NETWORK: "secure-browser-sessions"
+      VNC_BIND_HOST: ${VNC_BIND_HOST:-}
+      VNC_PROXY_HOST: ${VNC_PROXY_HOST:-}
       BROWSER_IMAGE: "vnc-browser-chrome:latest"
+      EGRESS_GUARD_REQUIRED: ${EGRESS_GUARD_REQUIRED:-false}
       ENABLE_HOST_PORT_BINDINGS: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./apps/backend/src:/app/apps/backend/src
       - ./apps/backend/prisma:/app/apps/backend/prisma
@@ -43,7 +48,8 @@ services:
         condition: service_healthy
     command: ["sh", "-c", "pnpm --filter @secure-browser/backend exec prisma migrate deploy && pnpm --filter @secure-browser/backend dev:watch"]
     networks:
-      - secure-browser-net
+      - secure-browser-db
+      - secure-browser-frontend
 
   frontend:
     build:
@@ -65,12 +71,40 @@ services:
     depends_on:
       - backend
     networks:
-      - secure-browser-net
+      - secure-browser-frontend
+
+  firewall:
+    build:
+      context: .
+      dockerfile: docker/firewall/Dockerfile
+    container_name: secure-browser-firewall
+    restart: unless-stopped
+    labels:
+      sb.egress-guard: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "iptables -w -S SB-EGRESS 2>/dev/null | grep -q 169.254.0.0/16 && iptables -w -S SB-INPUT 2>/dev/null | grep -q -- "-j DROP""]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      SESSION_NETWORK: "secure-browser-sessions"
 
 volumes:
   postgres_data:
 
 networks:
-  secure-browser-net:
-    name: secure-browser-net
+  secure-browser-db:
+    name: secure-browser-db
+    driver: bridge
+  secure-browser-frontend:
+    name: secure-browser-frontend
+    driver: bridge
+  secure-browser-sessions:
+    name: secure-browser-sessions
     driver: bridge
