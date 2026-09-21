@@ -39,25 +39,32 @@ RUN ARCH="$(dpkg --print-architecture)" && \
 # Install noVNC
 RUN git clone https://github.com/novnc/noVNC.git /opt/novnc
 RUN git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify
+COPY vnc_lite.html /opt/novnc/vnc_lite.html
 
-# Create openbox configuration directory
-RUN mkdir -p /root/.config/openbox
+# Create non-root user for running browser processes
+RUN groupadd -r browser && useradd -r -g browser -G audio,video browser \
+    && mkdir -p /home/browser/.config/openbox /tmp/chrome-data /tmp/vnc \
+    && chown -R browser:browser /home/browser /tmp/chrome-data /tmp/vnc
 
 # Create openbox configuration to disable window decorations
-RUN echo '<?xml version="1.0" encoding="UTF-8"?>' > /root/.config/openbox/rc.xml && \
-    echo '<openbox_config xmlns="http://openbox.org/3.4/rc">' >> /root/.config/openbox/rc.xml && \
-    echo '  <theme>' >> /root/.config/openbox/rc.xml && \
-    echo '    <name>Clearlooks</name>' >> /root/.config/openbox/rc.xml && \
-    echo '    <titleLayout></titleLayout>' >> /root/.config/openbox/rc.xml && \
-    echo '  </theme>' >> /root/.config/openbox/rc.xml && \
-    echo '  <desktops>' >> /root/.config/openbox/rc.xml && \
-    echo '    <number>1</number>' >> /root/.config/openbox/rc.xml && \
-    echo '  </desktops>' >> /root/.config/openbox/rc.xml && \
-    echo '</openbox_config>' >> /root/.config/openbox/rc.xml
+RUN echo '<?xml version="1.0" encoding="UTF-8"?>' > /home/browser/.config/openbox/rc.xml && \
+    echo '<openbox_config xmlns="http://openbox.org/3.4/rc">' >> /home/browser/.config/openbox/rc.xml && \
+    echo '  <theme>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '    <name>Clearlooks</name>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '    <titleLayout></titleLayout>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '  </theme>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '  <desktops>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '    <number>1</number>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '  </desktops>' >> /home/browser/.config/openbox/rc.xml && \
+    echo '</openbox_config>' >> /home/browser/.config/openbox/rc.xml && \
+    chown -R browser:browser /home/browser/.config
 
 # Create startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
+
+# Switch to non-root user
+USER browser
 
 # Expose VNC and noVNC ports
 EXPOSE 5900 6080

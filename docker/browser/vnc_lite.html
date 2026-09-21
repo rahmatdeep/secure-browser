@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+    noVNC lightweight viewer with postMessage authentication support.
+    Accepts VNC credentials via window.postMessage ({ type: 'SB_VNC_AUTH', password: '...' })
+    preventing passwords or guest tokens from appearing in iframe URLs or proxy logs.
+    -->
+    <title>SafeWeb Session Viewer</title>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #0c0d0e;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        html {
+            height: 100%;
+        }
+
+        #top_bar {
+            background-color: #1a1b1e;
+            color: #9ba1a6;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-bottom: 1px solid #2e3135;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        #status {
+            text-align: center;
+            font-family: monospace;
+        }
+        #sendCtrlAltDelButton {
+            background: #2b2d31;
+            border: 1px solid #3f4248;
+            color: #e3e5e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        #sendCtrlAltDelButton:hover {
+            background: #35373c;
+        }
+
+        #screen {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <script type="module" crossorigin="anonymous">
+        import RFB from './core/rfb.js';
+
+        let rfb;
+        let desktopName = "Session";
+        let vncPassword = readQueryVariable('password', '');
+        let pendingCredentials = false;
+
+        function connectedToServer(e) {
+            status("Connected (" + desktopName + ")");
+            try {
+                window.parent.postMessage({ type: 'SB_VNC_CONNECTED' }, parentOrigin || '*');
+            } catch (err) {}
+        }
+
+        function disconnectedFromServer(e) {
+            if (e.detail && e.detail.clean) {
+                status("Disconnected");
+            } else {
+                status("Connection closed");
+            }
+            try {
+                window.parent.postMessage({ type: 'SB_VNC_DISCONNECTED' }, parentOrigin || '*');
+            } catch (err) {}
+        }
+
+        function credentialsAreRequired(e) {
+            if (vncPassword) {
+                rfb.sendCredentials({ password: vncPassword });
+            } else {
+                pendingCredentials = true;
+                status("Authenticating...");
+                try {
+                    window.parent.postMessage({ type: 'SB_VNC_READY' }, parentOrigin || '*');
+                } catch (err) {}
+            }
+        }
+
+        function updateDesktopName(e) {
+            desktopName = e.detail.name;
+        }
+
+        function sendCtrlAltDel() {
+            if (rfb) {
+                rfb.sendCtrlAltDel();
+            }
+            return false;
+        }
+
+        function status(text) {
+            const el = document.getElementById('status');
+            if (el) el.textContent = text;
+        }
+
+        function readQueryVariable(name, defaultValue) {
+            const re = new RegExp('.*[?&]' + name + '=([^&#]*)');
+            const match = document.location.href.match(re);
+            if (match) {
+                return decodeURIComponent(match[1]);
+            }
+            return defaultValue;
+        }
+
+        const parentOrigin = readQueryVariable('parent_origin', '');
+
+        // Listen for credentials from parent frame via postMessage
+        window.addEventListener('message', (event) => {
+            // Security: verify message is strictly from the parent frame
+            if (event.source !== window.parent) return;
+            // Security: verify origin matches parentOrigin if provided
+            if (parentOrigin && event.origin !== parentOrigin) return;
+            if (!event.data) return;
+            if (event.data.type === 'SB_VNC_AUTH' && event.data.password) {
+                vncPassword = event.data.password;
+                if (rfb && pendingCredentials) {
+                    rfb.sendCredentials({ password: vncPassword });
+                    pendingCredentials = false;
+                }
+            }
+        });
+
+        document.getElementById('sendCtrlAltDelButton').onclick = sendCtrlAltDel;
+
+        const host = readQueryVariable('host', '');
+        const port = readQueryVariable('port', 0);
+        const path = readQueryVariable('path', 'websockify');
+        const ticket = readQueryVariable('ticket', '');
+
+        status("Connecting...");
+
+        const protocol = (window.location.protocol === "https:") ? 'wss:' : 'ws:';
+        let url;
+
+        if (host) {
+            url = new URL("https://" + host);
+            url.protocol = protocol;
+            if (port) {
+                url.port = port;
+            }
+            url = new URL("./" + path, url);
+        } else {
+            url = new URL(path, location.href);
+            url.protocol = protocol;
+        }
+
+        // Forward ticket to websocket upgrade if present in current URL
+        if (ticket && !url.searchParams.has('ticket')) {
+            url.searchParams.set('ticket', ticket);
+        }
+
+        // Create RFB instance
+        rfb = new RFB(document.getElementById('screen'), url.href, {
+            credentials: { password: vncPassword }
+        });
+
+        rfb.addEventListener("connect", connectedToServer);
+        rfb.addEventListener("disconnect", disconnectedFromServer);
+        rfb.addEventListener("credentialsrequired", credentialsAreRequired);
+        rfb.addEventListener("desktopname", updateDesktopName);
+
+        rfb.viewOnly = readQueryVariable('view_only', 'false') === 'true';
+        const scaleVal = readQueryVariable('scale', 'true');
+        rfb.scaleViewport = scaleVal === true || scaleVal === 'true' || scaleVal === '1';
+
+        // Signal readiness to parent frame
+        try {
+            window.parent.postMessage({ type: 'SB_VNC_READY' }, parentOrigin || '*');
+        } catch (err) {}
+    </script>
+</head>
+
+<body>
+    <div id="top_bar">
+        <div id="status">Loading</div>
+        <div id="sendCtrlAltDelButton">Send Ctrl+Alt+Del</div>
+    </div>
+    <div id="screen"></div>
+</body>
+</html>

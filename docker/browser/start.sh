@@ -40,24 +40,77 @@ sleep 2
 # Hide mouse cursor when inactive
 unclutter -idle 3 -root &
 
-# Start VNC server with appropriate scaling
-x11vnc -display :1 -nopw -forever -shared -ncache_cr -scale $SCALE_RESOLUTION &
+# Generate VNC password for this session (use env var if provided, otherwise random)
+if [ -z "$VNC_PASSWORD" ]; then
+    VNC_PASSWORD=$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 8)
+fi
+mkdir -p /tmp/vnc
+if ! x11vnc -storepasswd "$VNC_PASSWORD" /tmp/vnc/passwd; then
+    echo "FATAL: Failed to store VNC password in /tmp/vnc/passwd" >&2
+    exit 1
+fi
+if [ ! -s /tmp/vnc/passwd ]; then
+    echo "FATAL: /tmp/vnc/passwd is empty or missing" >&2
+    exit 1
+fi
 
-# Wait for VNC to start
+# Start VNC server with password authentication and appropriate scaling
+x11vnc -display :1 -rfbauth /tmp/vnc/passwd -forever -shared -ncache_cr -scale $SCALE_RESOLUTION &
+X11VNC_PID=$!
+
+# Wait for VNC to start and check liveness
 sleep 2
+if ! kill -0 $X11VNC_PID 2>/dev/null; then
+    echo "FATAL: x11vnc failed to start on display :1" >&2
+    exit 1
+fi
 
 # Start noVNC server on port 6080
 websockify --web=/opt/novnc 6080 localhost:5900 &
+WEBSOCKIFY_PID=$!
 
-# Wait for noVNC to be ready
+# Wait for noVNC to be ready and check liveness
 sleep 3
+if ! kill -0 $WEBSOCKIFY_PID 2>/dev/null; then
+    echo "FATAL: websockify failed to start on port 6080" >&2
+    exit 1
+fi
+
+# Generate in-container PAC script for dynamic egress filtering & DNS rebinding protection
+PAC_SCRIPT='function FindProxyForURL(url, host) {
+  var cleanHost = host.replace(/^\[|\]$/g, "");
+  if (cleanHost === "127.0.0.1" && (url.indexOf("6080") !== -1 || url.indexOf("5900") !== -1)) {
+    return "DIRECT";
+  }
+  var resolvedIp = dnsResolve(cleanHost);
+  if (!resolvedIp) {
+    return "PROXY 127.0.0.1:1";
+  }
+  if (resolvedIp === "::1" || resolvedIp.indexOf(":") !== -1) {
+    return "PROXY 127.0.0.1:1";
+  }
+  if (isInNet(resolvedIp, "127.0.0.0", "255.0.0.0") ||
+      isInNet(resolvedIp, "10.0.0.0", "255.0.0.0") ||
+      isInNet(resolvedIp, "172.16.0.0", "255.240.0.0") ||
+      isInNet(resolvedIp, "192.168.0.0", "255.255.0.0") ||
+      isInNet(resolvedIp, "169.254.0.0", "255.255.0.0") ||
+      isInNet(resolvedIp, "100.64.0.0", "255.192.0.0") ||
+      isInNet(resolvedIp, "192.0.2.0", "255.255.255.0") ||
+      isInNet(resolvedIp, "198.18.0.0", "255.254.0.0") ||
+      isInNet(resolvedIp, "198.51.100.0", "255.255.255.0") ||
+      isInNet(resolvedIp, "203.0.113.0", "255.255.255.0") ||
+      isInNet(resolvedIp, "0.0.0.0", "255.0.0.0")) {
+    return "PROXY 127.0.0.1:1";
+  }
+  return "DIRECT";
+}'
+PAC_B64=$(printf "%s" "$PAC_SCRIPT" | base64 | tr -d '\n')
 
 # Restart Chrome if it crashes
 restart_chrome() {
     while true; do
         # Base Chrome arguments
         chrome_args=(
-            --no-sandbox
             --disable-dev-shm-usage
             --disable-gpu
             --disable-software-rasterizer
@@ -71,7 +124,6 @@ restart_chrome() {
             --disable-translate
             --disable-background-networking
             --disable-sync
-            --disable-web-security
             --user-data-dir=/tmp/chrome-data
             --kiosk
             --disable-pinch
@@ -88,6 +140,7 @@ restart_chrome() {
             --disable-component-update
             --user-agent="$USER_AGENT"
             --window-size=$VIEWPORT_WIDTH,$VIEWPORT_HEIGHT
+            "--proxy-pac-url=data:application/x-ns-proxy-autoconfig;base64,${PAC_B64}"
         )
 
         # Add mobile-specific arguments
