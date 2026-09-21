@@ -2,10 +2,13 @@ export interface ContainerInfo {
   container?: any;
   containerIp?: string;
   vncPort: string;
+  vncHost?: string;
   guestToken?: string;
   url: string;
   createdAt: Date;
   timeoutId?: ReturnType<typeof setTimeout> | any;
+  vncPassword?: string;
+  vncTicket?: string;
 }
 
 export interface CreateContainerRequest {
@@ -23,7 +26,6 @@ export interface ContainerSummary {
   containerId: string;
   url: string;
   vncPort: string;
-  guestToken?: string;
   createdAt: Date;
 }
 

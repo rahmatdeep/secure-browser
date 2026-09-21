@@ -19,6 +19,11 @@ router.get("/:containerId", (req, res) => {
   containerController.getContainerInfo(req, res);
 });
 
+// Create a short-lived VNC connection ticket
+router.post("/:containerId/vnc-ticket", (req, res) => {
+  containerController.createVncTicket(req, res);
+});
+
 // List all active containers
 router.get("/", (req, res) => {
   containerController.listActiveContainers(req, res);

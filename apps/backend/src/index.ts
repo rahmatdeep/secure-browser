@@ -55,46 +55,63 @@ const vncProxy = createProxyMiddleware({
   changeOrigin: true,
   ws: true,
   router: async (req) => {
+    const deny = (status = 403, message = "Unauthorized access to session") => {
+      const res = (req as any).res;
+      if (res && !res.headersSent) {
+        res.status(status).json({ success: false, error: message });
+      } else if (req.socket && !req.socket.destroyed) {
+        req.socket.write(`HTTP/1.1 ${status} Forbidden\r\n\r\n`);
+        req.socket.destroy();
+      }
+      const err = new Error(message);
+      (err as any).statusCode = status;
+      throw err;
+    };
+
     const rawUrl = (req as any).originalUrl || req.url || "";
     const match = rawUrl.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
-    if (match) {
-      const containerId = match[1];
-      let token: string | undefined;
-      try {
-        const parsedUrl = new URL(rawUrl, "http://localhost");
-        token = parsedUrl.searchParams.get("token") || undefined;
-      } catch {}
-      if (!token) {
-        token = (req as any).headers?.["x-guest-token"] as string | undefined;
-      }
-
-      const dockerManager = containerController.getDockerManager();
-      const containerInfo = dockerManager.getContainerInfo(containerId, token);
-      if (!containerInfo) {
-        return undefined;
-      }
-
-      // 1. When running inside Docker, route directly over the Docker bridge network
-      if (process.env.DOCKER_NETWORK) {
-        if (containerInfo?.containerIp) {
-          return `http://${containerInfo.containerIp}:6080`;
-        }
-        return `http://vnc-browser-${containerId}:6080`;
-      }
-
-      // 2. When running on host, route via mapped host port
-      if (containerInfo?.vncPort && containerInfo.vncPort !== "6080") {
-        return `http://127.0.0.1:${containerInfo.vncPort}`;
-      }
-
-      // 3. Fallback to container IP or Docker internal DNS name
-      if (containerInfo?.containerIp) {
-        return `http://${containerInfo.containerIp}:6080`;
-      }
-
-      return `http://vnc-browser-${containerId}:6080`;
+    if (!match) {
+      return deny();
     }
-    return undefined;
+
+    const containerId = match[1];
+    let token: string | undefined;
+    let ticket: string | undefined;
+    try {
+      const parsedUrl = new URL(rawUrl, "http://localhost");
+      ticket = parsedUrl.searchParams.get("ticket") || undefined;
+      token = parsedUrl.searchParams.get("token") || undefined;
+    } catch {}
+    if (!token) {
+      token = (req as any).headers?.["x-guest-token"] as string | undefined;
+    }
+
+    const dockerManager = containerController.getDockerManager();
+    const containerInfo =
+      (ticket && dockerManager.getContainerInfoByTicket(ticket, containerId)) ||
+      (token && dockerManager.getContainerInfo(containerId, token)) ||
+      undefined;
+
+    if (!containerInfo) {
+      return deny();
+    }
+
+    // Route via mapped host port (decoupled from sessions network)
+    const vncHost =
+      containerInfo?.vncHost ||
+      process.env.VNC_PROXY_HOST ||
+      process.env.VNC_BIND_HOST ||
+      "127.0.0.1";
+    if (containerInfo?.vncPort && containerInfo.vncPort !== "6080") {
+      return `http://${vncHost}:${containerInfo.vncPort}`;
+    }
+
+    // Fallback if running on a shared bridge or custom configuration
+    if (containerInfo?.containerIp) {
+      return `http://${containerInfo.containerIp}:6080`;
+    }
+
+    return `http://${vncHost}:${containerInfo?.vncPort || 6080}`;
   },
   pathRewrite: (path) => {
     // Rewrite /api/containers/:id/vnc/vnc_lite.html -> /vnc_lite.html
@@ -102,18 +119,42 @@ const vncProxy = createProxyMiddleware({
   },
 });
 
+// Block any access originating from inside browser session containers (global middleware)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const remoteIp = req.socket.remoteAddress;
+  if (remoteIp) {
+    const dockerManager = containerController.getDockerManager();
+    if (dockerManager.isSessionIp(remoteIp)) {
+      res
+        .status(403)
+        .json({ success: false, error: "Access denied from browser session" });
+      return;
+    }
+  }
+  next();
+});
+
 // Mount the VNC proxy before express.json() with authorization check
 app.use(
   "/api/containers/:containerId/vnc",
   (req: Request, res: Response, next: NextFunction) => {
-    const containerId = String(req.params.containerId);
+    const containerId = String(
+      req.params?.containerId ||
+      req.originalUrl?.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/)?.[1] ||
+      ""
+    );
+    const ticket = typeof req.query.ticket === "string" ? req.query.ticket : undefined;
     const token =
       (typeof req.query.token === "string" ? req.query.token : undefined) ||
       (typeof req.headers["x-guest-token"] === "string"
         ? req.headers["x-guest-token"]
         : undefined);
     const dockerManager = containerController.getDockerManager();
-    const containerInfo = dockerManager.getContainerInfo(containerId, token);
+    const containerInfo =
+      (ticket && dockerManager.getContainerInfoByTicket(ticket, containerId)) ||
+      (token && dockerManager.getContainerInfo(containerId, token)) ||
+      undefined;
+
     if (!containerInfo) {
       res
         .status(403)
@@ -135,9 +176,15 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    return;
+  }
+  const statusCode = err.statusCode || 500;
+  if (statusCode >= 500) {
+    console.error(err.stack);
+  }
+  res.status(statusCode).json({ success: false, error: err.message || "Something went wrong!" });
 });
 
 // 404 handler
@@ -149,28 +196,52 @@ const server = http.createServer(app);
 
 // Handle WebSocket upgrade for noVNC streaming with authorization check
 server.on("upgrade", (req, socket, head) => {
-  if (req.url?.includes("/vnc/")) {
-    const match = req.url.match(/\/api\/containers\/([a-f0-9-]+)\/vnc/);
-    if (match) {
-      const containerId = match[1];
-      let token: string | undefined;
-      try {
-        const parsedUrl = new URL(req.url, "http://localhost");
-        token = parsedUrl.searchParams.get("token") || undefined;
-      } catch {}
-      if (!token) {
-        token = (req.headers["x-guest-token"] as string) || undefined;
-      }
-      const dockerManager = containerController.getDockerManager();
-      const containerInfo = dockerManager.getContainerInfo(containerId, token);
-      if (!containerInfo) {
-        socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
-        socket.destroy();
-        return;
-      }
+  const remoteIp = req.socket.remoteAddress;
+  if (remoteIp) {
+    const dockerManager = containerController.getDockerManager();
+    if (dockerManager.isSessionIp(remoteIp)) {
+      socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+      socket.destroy();
+      return;
     }
-    vncProxy.upgrade(req, socket as any, head);
   }
+
+  const match = req.url?.match(/^\/api\/containers\/([a-f0-9-]+)\/vnc/);
+  if (!match) {
+    socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  const containerId = match[1];
+  let token: string | undefined;
+  let ticket: string | undefined;
+  try {
+    const parsedUrl = new URL(req.url!, "http://localhost");
+    ticket = parsedUrl.searchParams.get("ticket") || undefined;
+    token = parsedUrl.searchParams.get("token") || undefined;
+  } catch {}
+  if (!token) {
+    token = (req.headers["x-guest-token"] as string) || undefined;
+  }
+
+  const dockerManager = containerController.getDockerManager();
+  const containerInfo =
+    (ticket && dockerManager.getContainerInfoByTicket(ticket, containerId)) ||
+    (token && dockerManager.getContainerInfo(containerId, token)) ||
+    undefined;
+
+  if (!containerInfo) {
+    socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+    socket.destroy();
+    return;
+  }
+
+  if (ticket) {
+    dockerManager.invalidateTicket(ticket);
+  }
+
+  vncProxy.upgrade(req, socket as any, head);
 });
 
 if (process.env.NODE_ENV !== "test") {
