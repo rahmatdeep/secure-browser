@@ -18,6 +18,7 @@ import { headers } from "next/headers";
 import axios from "axios";
 import { isMobileUserAgent } from "@secure-browser/shared";
 import { getGuestToken } from "@/lib/auth";
+import { validateContainerId } from "@/lib/validation";
 
 interface SessionPageProps {
   params: Promise<{
@@ -26,6 +27,7 @@ interface SessionPageProps {
 }
 
 async function getSessionInfo(containerId: string, guestToken: string) {
+  const safeId = validateContainerId(containerId);
   const API_BASE =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -33,7 +35,7 @@ async function getSessionInfo(containerId: string, guestToken: string) {
 
   try {
     const response = await axios.get(
-      `${API_BASE}/api/containers/${containerId}`,
+      `${API_BASE}/api/containers/${safeId}`,
       {
         headers: {
           "Cache-Control": "no-cache",
@@ -48,10 +50,59 @@ async function getSessionInfo(containerId: string, guestToken: string) {
   }
 }
 
+async function getSessionTicket(containerId: string, guestToken: string): Promise<string | null> {
+  const safeId = validateContainerId(containerId);
+  const API_BASE =
+    process.env.INTERNAL_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:3001";
+
+  try {
+    const response = await axios.post(
+      `${API_BASE}/api/containers/${safeId}/vnc-ticket`,
+      {},
+      {
+        headers: {
+          "Cache-Control": "no-cache",
+          "x-guest-token": guestToken,
+        },
+      }
+    );
+
+    return response.data.success ? response.data.data?.vncTicket || null : null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function SessionPage({ params }: SessionPageProps) {
   const { containerId } = await params;
+
+  // Validate containerId format to prevent path traversal
+  try {
+    validateContainerId(containerId);
+  } catch {
+    return (
+      <StatusScreen
+        kicker="Invalid session"
+        title="Invalid session identifier."
+        body="The session ID format is not valid. Please start a new session."
+      >
+        <Link href="/" className={statusActionClass}>
+          Start a new session
+          <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+        </Link>
+      </StatusScreen>
+    );
+  }
+
   const guestToken = await getGuestToken();
   const session = await getSessionInfo(containerId, guestToken);
+  let vncTicket = session?.vncTicket;
+  if (session && !vncTicket) {
+    vncTicket = await getSessionTicket(containerId, guestToken);
+  }
+
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
   const isMobile = isMobileUserAgent(userAgent);
@@ -73,12 +124,16 @@ export default async function SessionPage({ params }: SessionPageProps) {
       : `${apiBase}${session.vncUrl}`
     : "";
 
-  if (!session) {
+  if (!session || !vncTicket) {
     return (
       <StatusScreen
-        kicker="Session unavailable"
-        title="This browser isn't available."
-        body="It may have reached its ten-minute limit, been closed, or lost its connection. Try again or start a new session."
+        kicker={!session ? "Session unavailable" : "Connection unavailable"}
+        title={!session ? "This browser isn't available." : "Could not obtain session connection ticket."}
+        body={
+          !session
+            ? "It may have reached its ten-minute limit, been closed, or lost its connection. Try again or start a new session."
+            : "A temporary connection ticket could not be issued for this browser session. Please try again."
+        }
       >
         <Link href="/" className={statusActionClass}>
           Start a new session
@@ -94,70 +149,79 @@ export default async function SessionPage({ params }: SessionPageProps) {
     );
   }
 
+  const host = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const proto = headersList.get("x-forwarded-proto") || "http";
+  const frontendOrigin = host
+    ? `${proto}://${host}`
+    : process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+
   return (
     <div
       className="min-h-screen bg-ink text-on-ink"
       style={{ "--accent": "oklch(0.62 0.16 255)" } as CSSProperties}
     >
-      <div className="rise border-b border-ink-line">
-        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-7">
-          <div className="flex min-w-0 items-center gap-4">
+      <div className="flex flex-col gap-6 p-4 sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
             <Link
               href="/"
-              className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border border-ink-line text-on-ink-2 hover:no-underline"
               aria-label="Back to home"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line-weak bg-panel text-on-ink-2 transition-colors hover:border-line hover:text-on-ink"
             >
-              <ArrowLeft className="h-[15px] w-[15px]" strokeWidth={1.5} />
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
             </Link>
-
-            <div className="flex min-w-0 flex-col gap-[3px]">
-              <div className="flex min-w-0 flex-wrap items-center gap-[9px]">
-                <h1
-                  className="truncate text-[14.5px] font-medium tracking-[-0.013em] text-on-ink"
-                  title={session.url}
-                >
-                  {sessionUrl}
-                </h1>
-                <div className="flex items-center gap-1.5 rounded-[5px] bg-ink-3 px-[7px] py-0.5 font-mono text-[10.5px] uppercase tracking-[0.02em] text-on-ink-2">
-                  {isMobile ? (
-                    <Smartphone className="h-3 w-3" strokeWidth={1.5} />
-                  ) : (
-                    <Monitor className="h-3 w-3" strokeWidth={1.5} />
-                  )}
-                  {isMobile ? "Mobile 375x667" : "Desktop 1280x720"}
-                </div>
-              </div>
-              <span className="truncate font-mono text-[11.5px] text-on-ink-3">
-                vnc-browser-{containerId.slice(0, 8)} - internal address
-                pending - {session.vncPort ? `${session.vncPort}` : "port pending"}
-              </span>
+            <div className="min-w-0">
+              <p className="type-meta text-on-ink-3">Live isolation</p>
+              <h1 className="truncate font-sans text-base font-medium tracking-tight text-on-ink sm:text-lg">
+                {sessionUrl}
+              </h1>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <SessionCountdown createdAt={session.createdAt} variant="pill" />
-            <div className="flex h-9 items-center gap-2 rounded-full border border-ink-line px-3.5">
-              <span className="live-dot h-[5px] w-[5px] rounded-full bg-accent" />
-              <span className="text-[12.5px] tracking-[-0.006em] text-on-ink-2">
-                Streaming
+
+            <div className="flex items-center gap-2 rounded-lg border border-line-weak bg-panel/50 px-2.5 py-1">
+              {isMobile ? (
+                <Smartphone
+                  className="h-3.5 w-3.5 text-on-ink-3"
+                  strokeWidth={1.5}
+                />
+              ) : (
+                <Monitor
+                  className="h-3.5 w-3.5 text-on-ink-3"
+                  strokeWidth={1.5}
+                />
+              )}
+              <span className="type-meta text-on-ink-2">
+                {isMobile ? "Mobile" : "Desktop"}
               </span>
             </div>
-            <StopSessionButton
-              containerId={containerId}
-              variant="light"
-              redirectTo="/"
-            />
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-accent/20 bg-accent-soft/30 px-2.5 py-1">
+                <span className="live-dot h-[5px] w-[5px] rounded-full bg-accent" />
+                <span className="text-[12.5px] tracking-[-0.006em] text-on-ink-2">
+                  Streaming
+                </span>
+              </div>
+              <StopSessionButton
+                containerId={containerId}
+                variant="light"
+                redirectTo="/"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="lift p-4 sm:p-[26px_28px_22px]">
-        <SessionViewport
-          src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&token=${encodeURIComponent(guestToken)}&scale=true`}
-          isMobile={isMobile}
-        />
+        <div className="lift p-4 sm:p-[26px_28px_22px]">
+          <SessionViewport
+            src={`${vncTargetUrl}?path=api/containers/${containerId}/vnc/websockify&ticket=${encodeURIComponent(vncTicket)}&parent_origin=${encodeURIComponent(frontendOrigin)}&scale=true`}
+            vncPassword={session.vncPassword}
+            isMobile={isMobile}
+          />
+        </div>
       </div>
-
     </div>
   );
 }

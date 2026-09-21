@@ -1,7 +1,7 @@
 "use client";
 
 import { Expand, Maximize2, Minimize2, Monitor } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const NOVNC_BAR = 25;
 
@@ -10,12 +10,51 @@ type ViewMode = "default" | "theatre";
 interface SessionViewportProps {
   src: string;
   isMobile: boolean;
+  vncPassword?: string;
 }
 
-export function SessionViewport({ src, isMobile }: SessionViewportProps) {
+export function SessionViewport({ src, isMobile, vncPassword }: SessionViewportProps) {
   const [mode, setMode] = useState<ViewMode>("default");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const getTargetOrigin = useCallback(() => {
+    try {
+      if (typeof window !== "undefined" && src) {
+        return new URL(src, window.location.origin).origin;
+      }
+    } catch {}
+    return "";
+  }, [src]);
+
+  const sendAuth = useCallback(() => {
+    const targetOrigin = getTargetOrigin();
+    if (vncPassword && iframeRef.current?.contentWindow && targetOrigin) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: "SB_VNC_AUTH", password: vncPassword },
+        targetOrigin
+      );
+    }
+  }, [vncPassword, getTargetOrigin]);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      // Security: ensure message is strictly from our session iframe
+      if (iframeRef.current && event.source !== iframeRef.current.contentWindow) {
+        return;
+      }
+      const targetOrigin = getTargetOrigin();
+      if (!targetOrigin || event.origin !== targetOrigin) {
+        return;
+      }
+      if (event.data?.type === "SB_VNC_READY") {
+        sendAuth();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [sendAuth, getTargetOrigin]);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -109,7 +148,9 @@ export function SessionViewport({ src, isMobile }: SessionViewportProps) {
           style={{ aspectRatio: isMobile ? "375 / 667" : "16 / 9" }}
         >
           <iframe
+            ref={iframeRef}
             src={src}
+            onLoad={sendAuth}
             className="absolute left-0 w-full border-0"
             title="VNC Session"
             style={{

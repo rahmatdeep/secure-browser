@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import axios from "axios";
 import { getGuestToken } from "@/lib/auth";
+import { validateContainerId } from "@/lib/validation";
 
 const API_BASE =
   process.env.INTERNAL_API_URL ||
@@ -73,9 +74,10 @@ export async function getActiveSessions() {
 
 export async function stopSession(containerId: string) {
   try {
+    const safeId = validateContainerId(containerId);
     const guestToken = await getGuestToken();
     const response = await axios.delete(
-      `${API_BASE}/api/containers/${containerId}`,
+      `${API_BASE}/api/containers/${safeId}`,
       {
         headers: {
           "Content-Type": "application/json",
