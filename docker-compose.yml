@@ -55,13 +55,16 @@ services:
     networks:
       - secure-browser-net
 
+  # Built by default so plain `compose up --build` also produces the session image.
+  # It idles instead of running a browser stack; real sessions are
+  # spawned by the backend via the Docker socket.
   browser-image:
     build:
       context: docker/browser
       dockerfile: Dockerfile
     image: vnc-browser-chrome:latest
-    profiles:
-      - build-only
+    command: ["sleep", "infinity"]
+    restart: "no"
 
 volumes:
   postgres_data:
